@@ -1,0 +1,20 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/more_vert.svg</file>
+        <file>icons/settings.svg</file>
+        <file>icons/add.svg</file>
+        <file>icons/add_box.svg</file>
+        <file>icons/chevron_left.svg</file>
+        <file>icons/chevron_right.svg</file>
+        <file>icons/close.svg</file>
+        <file>icons/flight.svg</file>
+        <file>icons/flights_and_hotels.svg</file>
+        <file>icons/food_bank.svg</file>
+        <file>icons/home.svg</file>
+        <file>icons/hotel.svg</file>
+        <file>icons/menu.svg</file>
+        <file>icons/search.svg</file>
+        <file>icons/share.svg</file>
+        <file>icons/transportation.svg</file>
+    </qresource>
+</RCC>

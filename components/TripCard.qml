@@ -1,0 +1,111 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Controls.Material
+import QtQuick.Effects
+
+ItemDelegate {
+    id: control
+    implicitHeight: 88
+
+    property string tripName: ""
+    property int memberCount: 0
+
+    background: Rectangle {
+        radius: 16
+        color: {
+            if (control.pressed)
+                return Material.color(
+                            Material.Blue, Material.theme
+                            === Material.Dark ? Material.Shade800 : Material.Shade100)
+            if (control.hovered)
+                return Material.theme === Material.Dark ? Qt.rgba(
+                                                              255 / 255,
+                                                              255 / 255,
+                                                              255 / 255,
+                                                              0.08) : Material.color(
+                                                              Material.Grey,
+                                                              Material.Shade50)
+            return ApplicationWindow.window.cardBackground
+        }
+        border.color: control.hovered ? Material.accent : ApplicationWindow.window.cardBorder
+        border.width: control.hovered ? 2 : 1
+
+        layer.enabled: !control.pressed
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0, 0, 0.08)
+            shadowBlur: 0.3
+            shadowVerticalOffset: 1
+            shadowHorizontalOffset: 0
+        }
+    }
+
+    contentItem: RowLayout {
+        anchors.margins: 16
+        spacing: 16
+
+        Rectangle {
+            width: 52
+            height: 52
+            radius: 26
+            color: Material.theme === Material.Dark ? Qt.rgba(
+                                                          33 / 255, 150 / 255,
+                                                          243 / 255,
+                                                          0.2) : Material.color(
+                                                          Material.Blue,
+                                                          Material.Shade100)
+            border.color: Material.color(
+                              Material.Blue, Material.theme
+                              === Material.Dark ? Material.Shade600 : Material.Shade300)
+            border.width: 1.5
+            Layout.alignment: Qt.AlignVCenter
+
+            Label {
+                anchors.centerIn: parent
+                text: control.tripName.substring(0, 1)
+                font.pixelSize: 24
+                font.weight: Font.Bold
+                color: Material.accent
+            }
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
+            spacing: 6
+
+            Label {
+                text: control.tripName
+                font.pixelSize: 17
+                font.weight: Font.DemiBold
+                Layout.fillWidth: true
+            }
+            Label {
+                text: control.memberCount + " members"
+                opacity: 0.6
+                font.pixelSize: 14
+            }
+        }
+
+        Label {
+            text: "›"
+            font.pixelSize: 28
+            opacity: 0.3
+            Layout.alignment: Qt.AlignVCenter
+        }
+    }
+
+    Component.onCompleted: {
+        var cursor = Qt.createComponent("HoverHandler.qml")
+        if (cursor.status === Component.Ready) {
+            cursor.createObject(control, {
+                                    "cursorShape": Qt.PointingHandCursor
+                                })
+        } else {
+            var hoverHandler = Qt.createQmlObject(
+                        'import QtQuick; HoverHandler { cursorShape: Qt.PointingHandCursor }',
+                        control)
+        }
+    }
+}
