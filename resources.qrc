@@ -16,5 +16,10 @@
         <file>icons/search.svg</file>
         <file>icons/share.svg</file>
         <file>icons/transportation.svg</file>
+        <file>icons/more_horiz.svg</file>
+        <file>icons/delete.svg</file>
+        <file>icons/delete_forever.svg</file>
+        <file>icons/edit.svg</file>
+        <file>icons/remove.svg</file>
     </qresource>
 </RCC>
