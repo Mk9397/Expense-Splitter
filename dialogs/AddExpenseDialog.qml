@@ -11,6 +11,8 @@ Dialog {
     width: parent.width * 0.88
     padding: 24
 
+    signal expenseCreated(string expenseTitle, int expenseAmount, string paidBy)
+
     ColumnLayout {
         width: parent.width
         spacing: 16
@@ -44,8 +46,16 @@ Dialog {
             font.weight: Font.DemiBold
             highlighted: true
             onClicked: {
-                console.log("TODO: Add expense logic")
-                root.close()
+                if (titleField.text.trim() !== "" && amountField.text.trim(
+                            ) !== "") {
+                    root.expenseCreated(titleField.text,
+                                        parseInt(amountField.text) || 0.00,
+                                        paidByField.text)
+                    titleField.clear()
+                    amountField.clear()
+                    paidByField.clear()
+                    root.close()
+                }
             }
             Component.onCompleted: {
                 var hoverHandler = Qt.createQmlObject(

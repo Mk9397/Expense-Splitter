@@ -26,10 +26,7 @@ Page {
             spacing: 4
 
             ToolButton {
-                text: "‹"
-                font.pixelSize: 28
-                Layout.preferredWidth: 48
-                Layout.preferredHeight: 48
+                icon.source: "qrc:/icons/chevron_left.svg"
                 onClicked: root.StackView.view.pop()
                 Component.onCompleted: pointerCursor.createObject(this)
             }
@@ -225,26 +222,7 @@ Page {
             spacing: 12
             clip: true
 
-            model: ListModel {
-                ListElement {
-                    title: "Transport"
-                    amount: "₦4,000"
-                    icon: "🚗"
-                    paidBy: "John"
-                }
-                ListElement {
-                    title: "Food"
-                    amount: "₦6,500"
-                    icon: "🍽️"
-                    paidBy: "Sarah"
-                }
-                ListElement {
-                    title: "Hotel"
-                    amount: "₦12,000"
-                    icon: "🏨"
-                    paidBy: "Mike"
-                }
-            }
+            model: ListModel {}
 
             delegate: ExpenseCard {
                 width: ListView.view.width
@@ -270,12 +248,47 @@ Page {
         }
     }
 
+    // Keep a full list of trips for filtering
+    property var allExpenses: [{
+            "title": "Transport",
+            "amount": "₦4,000",
+            "icon": "🚗",
+            "paidBy": "John"
+        }, {
+            "title": "Food",
+            "amount": "₦6,500",
+            "icon": "🍽️",
+            "paidBy": "Sarah"
+        }, {
+            "title": "Hotel",
+            "amount": "₦12,000",
+            "icon": "🏨",
+            "paidBy": "Mike"
+        }]
+
+    // Populate the list initially
+    Component.onCompleted: {
+        for (var i = 0; i < allExpenses.length; i++) {
+            expenseList.model.append(allExpenses[i])
+        }
+    }
+
     SettlementDialog {
         id: settlementDialog
     }
 
     AddExpenseDialog {
         id: addExpenseDialog
+        onExpenseCreated: function (expenseTitle, expenseAmount, paidBy) {
+            var newExpense = {
+                "title": expenseTitle,
+                "amount": "₦" + expenseAmount,
+                "icon": "",
+                "paidBy": paidBy
+            }
+            allExpenses.push(newExpense)
+            expenseList.model.append(newExpense)
+        }
     }
 
     Component {

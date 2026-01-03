@@ -2,4 +2,4 @@
 name = "PySide QtQuick Project"
 
 [tool.pyside6-project]
-files = ["components/ExpenseCard.qml", "components/SummaryCard.qml", "components/TripCard.qml", "dialogs/AddExpenseDialog.qml", "dialogs/AddTripDialog.qml", "dialogs/SettlementDialog.qml", "main.py", "main.qml", "main_old.qml", "pages/HomePage.qml", "pages/TripPage.qml", "resources.qrc"]
+files = ["components/ExpenseCard.qml", "components/SummaryCard.qml", "components/TripCard.qml", "dialogs/AddExpenseDialog.qml", "dialogs/AddTripDialog.qml", "dialogs/DeleteTripDialog.qml", "dialogs/EditTripDialog.qml", "dialogs/SettlementDialog.qml", "main.py", "main.qml", "main_old.qml", "pages/HomePage.qml", "pages/TripPage.qml", "resources.qrc", "src/trip_manager.py"]

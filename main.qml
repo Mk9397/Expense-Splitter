@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
+import QtCore
 import "pages"
 
 ApplicationWindow {
@@ -18,6 +19,20 @@ ApplicationWindow {
     Material.theme: themeMode
     Material.accent: Material.Blue
     Material.primary: Material.Blue
+
+    // Theme settings
+    Settings {
+        id: themeSettings
+        property int savedTheme: Material.System
+    }
+
+    Component.onCompleted: {
+        themeMode = themeSettings.savedTheme
+    }
+
+    onThemeModeChanged: {
+        themeSettings.savedTheme = themeMode
+    }
 
     // Computed properties for consistent styling
     readonly property color cardBackground: Material.theme
@@ -58,7 +73,9 @@ ApplicationWindow {
         id: stack
         anchors.fill: parent
         initialItem: HomePage {
-            onThemeModeChanged: app.themeMode = newMode
+            onThemeModeChanged: function (newMode) {
+                app.themeMode = newMode
+            }
         }
     }
 

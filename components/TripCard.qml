@@ -26,9 +26,21 @@ ItemDelegate {
                                                               0.08) : Material.color(
                                                               Material.Grey,
                                                               Material.Shade50)
-            return ApplicationWindow.window.cardBackground
+            var window = ApplicationWindow.window
+            return window ? window.cardBackground : (Material.theme
+                                                     === Material.Dark ? Qt.rgba(
+                                                                             255 / 255,
+                                                                             255 / 255,
+                                                                             255 / 255,
+                                                                             0.05) : "#FFFFFF")
         }
-        border.color: control.hovered ? Material.accent : ApplicationWindow.window.cardBorder
+        border.color: {
+            if (control.hovered)
+                return Material.accent
+            var window = ApplicationWindow.window
+            return window ? window.cardBorder : Material.color(
+                                Material.Grey, Material.Shade200)
+        }
         border.width: control.hovered ? 2 : 1
 
         layer.enabled: !control.pressed
@@ -63,7 +75,7 @@ ItemDelegate {
 
             Label {
                 anchors.centerIn: parent
-                text: control.tripName.substring(0, 1)
+                text: control.tripName.substring(0, 1).toUpperCase()
                 font.pixelSize: 24
                 font.weight: Font.Bold
                 color: Material.accent
@@ -80,9 +92,10 @@ ItemDelegate {
                 font.pixelSize: 17
                 font.weight: Font.DemiBold
                 Layout.fillWidth: true
+                elide: Text.ElideRight
             }
             Label {
-                text: control.memberCount + " members"
+                text: control.memberCount + " member" + (control.memberCount !== 1 ? "s" : "")
                 opacity: 0.6
                 font.pixelSize: 14
             }

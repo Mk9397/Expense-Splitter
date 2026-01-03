@@ -11,6 +11,8 @@ Dialog {
     width: parent.width * 0.88
     padding: 24
 
+    signal tripCreated(string tripName, int memberCount)
+
     ColumnLayout {
         width: parent.width
         spacing: 16
@@ -37,8 +39,14 @@ Dialog {
             font.weight: Font.DemiBold
             highlighted: true
             onClicked: {
-                console.log("TODO: Add trip logic")
-                root.close()
+                if (tripNameField.text.trim() !== "" && membersField.text.trim(
+                            ) !== "") {
+                    root.tripCreated(tripNameField.text,
+                                     parseInt(membersField.text) || 0)
+                    tripNameField.clear()
+                    membersField.clear()
+                    root.close()
+                }
             }
             Component.onCompleted: {
                 var hoverHandler = Qt.createQmlObject(
