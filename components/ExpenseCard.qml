@@ -29,9 +29,9 @@ ItemDelegate {
                                                               0.08) : Material.color(
                                                               Material.Grey,
                                                               Material.Shade50)
-            return ApplicationWindow.window.cardBackground
+            return ApplicationWindow.window ? ApplicationWindow.window.cardBackground : Material.Blue
         }
-        border.color: ApplicationWindow.window.cardBorder
+        border.color: ApplicationWindow.window ? ApplicationWindow.window.cardBorder : Material.Blue
         border.width: 1
 
         layer.enabled: !control.pressed

@@ -12,6 +12,8 @@ Page {
     property string tripName: ""
     property int memberCount: 0
 
+    property int totalExpenses: 0
+
     background: Rectangle {
         color: Material.background
     }
@@ -144,7 +146,7 @@ Page {
                         color: Material.accent
                     }
                     Label {
-                        text: "₦22,500"
+                        text: totalAmount()
                         font.pixelSize: 36
                         font.weight: Font.Bold
                         color: Material.accent
@@ -173,7 +175,8 @@ Page {
                         color: Material.accent
                     }
                     Label {
-                        text: "₦" + (22500 / root.memberCount).toFixed(0)
+                        text: "₦" + (totalAmount(
+                                         ) / root.memberCount).toFixed(0)
                         font.pixelSize: 36
                         font.weight: Font.Bold
                         color: Material.accent
@@ -230,7 +233,7 @@ Page {
                 expenseTitle: title
                 expenseAmount: amount
                 expenseIcon: icon
-                paidBy: paidBy
+                paidBy: paid
                 memberCount: root.memberCount
                 onClicked: console.log("TODO: View/Edit Expense")
             }
@@ -249,28 +252,39 @@ Page {
         }
     }
 
-    // Keep a full list of trips for filtering
-    property var allExpenses: [{
-            "title": "Transport",
-            "amount": "₦4,000",
-            "icon": "🚗",
-            "paidBy": "John"
-        }, {
-            "title": "Food",
-            "amount": "₦6,500",
-            "icon": "🍽️",
-            "paidBy": "Sarah"
-        }, {
-            "title": "Hotel",
-            "amount": "₦12,000",
-            "icon": "🏨",
-            "paidBy": "Mike"
-        }]
+    // Refresh list from Python backend
+    function refreshExpenseList() {
+        expenseList.model.clear()
+        var expenses = tripManager.getTripById(tripId)["expenses"]
+        totalExpenses = expenses.length
 
-    // Populate the list initially
+        expenses.forEach(expense => {
+                             expenseList.model.append({
+                                                          "id": expense.id,
+                                                          "title": expense.title,
+                                                          "amount": expense.amount,
+                                                          "paid": expense.paid_by
+                                                      })
+                         })
+    }
+
+    function totalAmount() {
+        var expenses = tripManager.getTripById(tripId)["expenses"]
+        var total = 0
+        expenses.forEach(expense => total += expense.amount)
+        return total
+    }
+
+    // Load expenses on startup
     Component.onCompleted: {
-        for (var i = 0; i < allExpenses.length; i++) {
-            expenseList.model.append(allExpenses[i])
+        refreshExpenseList()
+    }
+
+    // Listen for changes from Python
+    Connections {
+        target: tripManager
+        function onTripsChanged() {
+            refreshExpenseList()
         }
     }
 
@@ -281,14 +295,7 @@ Page {
     AddExpenseDialog {
         id: addExpenseDialog
         onExpenseCreated: function (expenseTitle, expenseAmount, paidBy) {
-            var newExpense = {
-                "title": expenseTitle,
-                "amount": "₦" + expenseAmount,
-                "icon": "",
-                "paidBy": paidBy
-            }
-            allExpenses.push(newExpense)
-            expenseList.model.append(newExpense)
+            tripManager.addExpense(tripId, expenseTitle, expenseAmount, paidBy)
         }
     }
 
