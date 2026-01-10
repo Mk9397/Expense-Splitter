@@ -32,20 +32,17 @@ Page {
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: 24
-            anchors.rightMargin: 20
-            spacing: 8
+            anchors.rightMargin: 8
 
             Label {
                 text: "Group Trip"
-                font.pixelSize: 26
+                font.pixelSize: 24
                 font.weight: Font.DemiBold
-                Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: true
             }
 
             ToolButton {
                 id: settingsButton
-                icon.name: "preferences-desktop-theme"
                 icon.source: "qrc:/icons/settings.svg"
                 onClicked: themeMenu.open()
                 Component.onCompleted: pointerCursor.createObject(this)
@@ -89,9 +86,8 @@ Page {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 24
-        anchors.topMargin: 20
-        spacing: 20
+        anchors.margins: 20
+        spacing: 16
 
         // Search Bar
         RowLayout {
@@ -264,22 +260,45 @@ Page {
             ListView {
                 id: tripList
                 anchors.fill: parent
-                clip: true
                 spacing: 12
+                clip: true
                 visible: count > 0
 
                 model: ListModel {}
 
-            delegate: TripCard {
-                width: ListView.view.width
-                tripName: name
-                memberCount: members
-                onClicked: {
-                    var stack = root.StackView.view
-                    stack.push("TripPage.qml", {
-                                   "tripName": name,
-                                   "memberCount": members
-                               })
+                delegate: TripCard {
+                    width: ListView.view.width
+                    tripId: model.id
+                    tripName: model.name
+                    memberCount: model.members
+
+                    onClicked: {
+                        var stack = root.StackView.view
+                        stack.push("TripPage.qml", {
+                                       "tripId": id,
+                                       "tripName": name,
+                                       "memberCount": members
+                                   })
+                    }
+
+                    onEditTrip: {
+                        editTripDialog.tripId = id
+                        editTripDialog.tripName = name
+                        editTripDialog.memberCount = members
+                        editTripDialog.open()
+                    }
+
+                    onDeleteTrip: {
+                        deleteTripDialog.tripId = id
+                        deleteTripDialog.tripName = name
+                        deleteTripDialog.open()
+                    }
+
+                    onShareTrip: {
+                        // TODO: Implement share functionality
+                        console.log("Share trip:", name)
+                        console.log("Trip ID:", id)
+                    }
                 }
             }
         }
@@ -333,6 +352,14 @@ Page {
         onTripCreated: function (tripName, memberCount) {
             tripManager.addTrip(tripName, memberCount)
         }
+    }
+
+    DeleteTripDialog {
+        id: deleteTripDialog
+    }
+
+    EditTripDialog {
+        id: editTripDialog
     }
 
     Component {

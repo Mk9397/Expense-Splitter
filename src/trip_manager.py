@@ -1,7 +1,10 @@
 # This Python file uses the following encoding: utf-8
+import re
 from PySide6.QtCore import QObject, Signal, Slot, Property, QSettings
 from PySide6.QtQml import QmlElement
+from datetime import datetime
 import json
+import uuid
 
 QML_IMPORT_NAME = "com.expensesplitter.backend"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -10,6 +13,8 @@ QML_IMPORT_MINOR_VERSION = 0
 
 @QmlElement
 class TripManager(QObject):
+    """Backend manager for trips with model integration"""
+
     tripsChanged = Signal()
 
     def __init__(self):
@@ -33,19 +38,39 @@ class TripManager(QObject):
         self.settings.setValue("trips", trips_json)
         self.tripsChanged.emit()
 
-    @Slot(str, int)
-    def addTrip(self, name, members):
+    @Slot(str, int, result=str)
+    def addTrip(self, name: str, members: int):
         """Add a new trip"""
-        trip = {"name": name, "members": members, "expenses": []}
+        trip = {
+            "id": str(uuid.uuid4()),
+            "name": name,
+            "members": members,
+            "expenses": [],
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat(),
+        }
         self._trips.append(trip)
         self.save_trips()
+        return trip["id"]
 
     @Slot(str, result=bool)
-    def deleteTrip(self, name):
+    def deleteTrip(self, trip_id: str):
         """Delete a trip by name"""
         for i, trip in enumerate(self._trips):
-            if trip["name"] == name:
+            if trip["id"] == trip_id:
                 self._trips.pop(i)
+                self.save_trips()
+                return True
+        return False
+
+    @Slot(str, str, int, result=bool)
+    def editTrip(self, trip_id, name, members):
+        """Edit a trip's details"""
+        for trip in self._trips:
+            if trip["id"] == trip_id:
+                trip["name"] = name
+                trip["members"] = members
+                trip["updated_at"] = datetime.now().isoformat()
                 self.save_trips()
                 return True
         return False
@@ -58,29 +83,57 @@ class TripManager(QObject):
                 return trip
         return {}
 
+    @Slot(str, result="QVariantMap")
+    def getTripById(self, trip_id):
+        """Get a specific trip by ID"""
+        for trip in self._trips:
+            if trip["id"] == trip_id:
+                return trip
+        return {}
+
     @Slot(str, str, float, str)
-    def addExpense(self, trip_name, description, amount, paid_by):
+    def addExpense(self, trip_id, title, amount, paid_by):
         """Add an expense to a specific trip"""
         for trip in self._trips:
-            if trip["name"] == trip_name:
+            if trip["id"] == trip_id:
                 expense = {
-                    "description": description,
+                    "id": str(uuid.uuid4()),
+                    "title": title,
                     "amount": amount,
                     "paid_by": paid_by,
+                    "created_at": datetime.now().isoformat(),
                 }
                 trip["expenses"].append(expense)
+                trip["updated_at"] = datetime.now().isoformat()
                 self.save_trips()
-                break
+                return expense["id"]
+        return ""
 
-    @Slot(str, int, result=bool)
-    def deleteExpense(self, trip_name, expense_index):
+    @Slot(str, str, result=bool)
+    def deleteExpense(self, trip_id, expense_id):
         """Delete an expense from a trip"""
         for trip in self._trips:
-            if trip["name"] == trip_name:
-                if 0 <= expense_index < len(trip["expenses"]):
-                    trip["expenses"].pop(expense_index)
-                    self.save_trips()
-                    return True
+            if trip["id"] == trip_id:
+                for i, expense in enumerate(trip["expenses"]):
+                    if expense["id"] == expense_id:
+                        trip["expenses"].pop(i)
+                        self.save_trips()
+                        return True
+        return False
+
+    @Slot(str, str, str, float, str, result=bool)
+    def editExpense(self, trip_id, expense_id, title, amount, paid_by):
+        """Edit an expense in a specific trip"""
+        for trip in self._trips:
+            if trip["id"] == trip_id:
+                for expense in trip["expenses"]:
+                    if expense["id"] == expense_id:
+                        expense["title"] = title
+                        expense["amount"] = amount
+                        expense["paid_by"] = paid_by
+                        trip["updated_at"] = datetime.now().isoformat()
+                        self.save_trips()
+                        return True
         return False
 
     @Property(list, notify=tripsChanged)

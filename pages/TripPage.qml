@@ -8,6 +8,7 @@ import "../dialogs"
 
 Page {
     id: root
+    property string tripId: ""
     property string tripName: ""
     property int memberCount: 0
 

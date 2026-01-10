@@ -8,8 +8,13 @@ ItemDelegate {
     id: control
     implicitHeight: 88
 
+    property string tripId: ""
     property string tripName: ""
     property int memberCount: 0
+
+    signal editTrip
+    signal deleteTrip
+    signal shareTrip
 
     background: Rectangle {
         radius: 16
@@ -101,11 +106,63 @@ ItemDelegate {
             }
         }
 
-        Label {
-            text: "›"
-            font.pixelSize: 28
-            opacity: 0.3
+        ToolButton {
+            id: moreButton
+            icon.source: "qrc:/icons/more_vert.svg"
+            icon.width: 20
+            icon.height: 20
             Layout.alignment: Qt.AlignVCenter
+
+            onClicked: moreMenu.popup()
+
+            Component.onCompleted: {
+                var hoverHandler = Qt.createQmlObject(
+                            'import QtQuick; HoverHandler { cursorShape: Qt.PointingHandCursor }',
+                            moreButton)
+            }
+
+            Menu {
+                id: moreMenu
+
+                MenuItem {
+                    text: "Edit"
+                    icon.source: "qrc:/icons/edit.svg"
+                    onTriggered: control.editTrip()
+                }
+
+                MenuItem {
+                    text: "Share"
+                    icon.source: "qrc:/icons/share.svg"
+                    onTriggered: control.shareTrip()
+                }
+
+                MenuSeparator {}
+
+                MenuItem {
+                    text: "Delete"
+                    icon.source: "qrc:/icons/delete.svg"
+                    icon.color: Material.color(Material.Red)
+                    onTriggered: control.deleteTrip()
+                }
+            }
+
+            // Prevent click from bubbling to the card
+            MouseArea {
+                id: mouse
+                anchors.fill: parent
+                onClicked: function (event) {
+                    event.accepted = true
+                    moreButton.clicked()
+                }
+            }
+        }
+
+        Image {
+            Layout.alignment: Qt.AlignVCenter
+            source: "qrc:/icons/chevron_right.svg"
+            sourceSize.width: 25
+            sourceSize.height: 25
+            opacity: 0.3
         }
     }
 
