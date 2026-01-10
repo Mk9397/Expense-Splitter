@@ -43,7 +43,8 @@ class TripManager(QObject):
         """Add a new trip"""
         trip = {
             "id": str(uuid.uuid4()),
-            "name": name,
+            "name": name.strip(),
+            "currency": self.settings.value("currency", "NGN"),
             "members": members,
             "expenses": [],
             "created_at": datetime.now().isoformat(),
@@ -63,12 +64,13 @@ class TripManager(QObject):
                 return True
         return False
 
-    @Slot(str, str, int, result=bool)
-    def editTrip(self, trip_id, name, members):
+    @Slot(str, str, int, str, result=bool)
+    def editTrip(self, trip_id: str, name: str, members: int, currency: str):
         """Edit a trip's details"""
         for trip in self._trips:
             if trip["id"] == trip_id:
-                trip["name"] = name
+                trip["name"] = name.strip()
+                trip["currency"] = currency
                 trip["members"] = members
                 trip["updated_at"] = datetime.now().isoformat()
                 self.save_trips()

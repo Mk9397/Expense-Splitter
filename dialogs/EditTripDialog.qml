@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
+import "../components"
 
 Dialog {
     id: root
@@ -14,6 +15,7 @@ Dialog {
     property string tripId: ""
     property string tripName: ""
     property int memberCount: 0
+    property string tripCurrency: ""
 
     ColumnLayout {
         width: parent.width
@@ -36,6 +38,13 @@ Dialog {
             font.pixelSize: 15
         }
 
+        CurrencyComboBox {
+            id: editCurrencyCombo
+            Layout.fillWidth: true
+            currentCode: root.tripCurrency
+            Component.onCompleted: pointerCursor.createObject(this)
+        }
+
         RowLayout {
             Layout.fillWidth: true
             spacing: 12
@@ -55,9 +64,10 @@ Dialog {
                 Layout.preferredHeight: 48
                 highlighted: true
                 onClicked: {
-                    // TODO: Add update method to tripManager
-                    console.log("Update trip:", editTripNameField.text,
-                                editMembersField.text)
+                    tripManager.editTrip(
+                                root.tripId, editTripNameField.text,
+                                editMembersField.text,
+                                editCurrencyCombo.model[editCurrencyCombo.currentIndex].code)
                     root.close()
                 }
                 Component.onCompleted: pointerCursor.createObject(this)

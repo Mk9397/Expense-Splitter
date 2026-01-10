@@ -43,6 +43,46 @@ Page {
                 x: parent.width
                 y: parent.height
 
+                Label {
+                    text: "Global Currency"
+                    font.pixelSize: 12
+                    opacity: 0.6
+                    leftPadding: 16
+                    topPadding: 8
+                    bottomPadding: 4
+                }
+
+                MenuItem {
+                    contentItem: CurrencyComboBox {
+                        id: globalCurrencyCombo
+
+                        onActivated: settingsManager.setCurrency(
+                                         globalCurrencyCombo.model[globalCurrencyCombo.currentIndex].code)
+
+                        Component.onCompleted: {
+                            pointerCursor.createObject(this)
+                            for (var i = 0; i < model.length; i++) {
+                                if (globalCurrencyCombo.model[i].code
+                                        === settingsManager.currency) {
+                                    globalCurrencyCombo.currentIndex = i
+                                    break
+                                }
+                            }
+                        }
+                    }
+                }
+
+                MenuSeparator {}
+
+                Label {
+                    text: "Theme"
+                    font.pixelSize: 12
+                    opacity: 0.6
+                    leftPadding: 16
+                    topPadding: 8
+                    bottomPadding: 4
+                }
+
                 MenuItem {
                     text: "System Theme"
                     checkable: true
@@ -266,6 +306,7 @@ Page {
                         editTripDialog.tripId = id
                         editTripDialog.tripName = name
                         editTripDialog.memberCount = members
+                        editTripDialog.tripCurrency = currency
                         editTripDialog.open()
                     }
 
