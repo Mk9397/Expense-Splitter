@@ -21,5 +21,6 @@
         <file>icons/delete_forever.svg</file>
         <file>icons/edit.svg</file>
         <file>icons/remove.svg</file>
+        <file>icons/check.svg</file>
     </qresource>
 </RCC>
