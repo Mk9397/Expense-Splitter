@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
-import QtCore
 import "pages"
 
 ApplicationWindow {
@@ -13,6 +12,8 @@ ApplicationWindow {
     minimumWidth: 300
     minimumHeight: 500
 
+    maximumWidth: 500
+
     title: "Expense Splitter"
 
     property int themeMode: Material.System
@@ -21,17 +22,30 @@ ApplicationWindow {
     Material.primary: Material.Blue
 
     // Theme settings
-    Settings {
-        id: themeSettings
-        property int savedTheme: Material.System
-    }
-
     Component.onCompleted: {
-        themeMode = themeSettings.savedTheme
+        var savedTheme = settingsManager.theme
+        if (savedTheme === "light") {
+            themeMode = Material.Light
+        } else if (savedTheme === "dark") {
+            themeMode = Material.Dark
+        } else {
+            themeMode = Material.System
+        }
     }
 
-    onThemeModeChanged: {
-        themeSettings.savedTheme = themeMode
+    // Listen for theme changes from settings
+    Connections {
+        target: settingsManager
+        function onThemeChanged() {
+            var newTheme = settingsManager.theme
+            if (newTheme === "light") {
+                app.themeMode = Material.Light
+            } else if (newTheme === "dark") {
+                app.themeMode = Material.Dark
+            } else {
+                app.themeMode = Material.System
+            }
+        }
     }
 
     // Computed properties for consistent styling
@@ -72,11 +86,7 @@ ApplicationWindow {
     StackView {
         id: stack
         anchors.fill: parent
-        initialItem: HomePage {
-            onThemeModeChanged: function (newMode) {
-                app.themeMode = newMode
-            }
-        }
+        initialItem: HomePage {}
     }
 
     // Global pointer cursor component

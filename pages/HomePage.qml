@@ -2,27 +2,16 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
-import QtCore
 import "../components"
 import "../dialogs"
 
 Page {
     id: root
     title: "Trips"
-
-    signal themeModeChanged(int newMode)
+    property int totalTrips: 0
 
     background: Rectangle {
         color: Material.background
-    }
-
-    // Track total trip count
-    property int totalTrips: 0
-
-    // Settings for theme only (trips are handled in Python)
-    Settings {
-        id: appSettings
-        property int theme: Material.System
     }
 
     header: ToolBar {
@@ -44,41 +33,33 @@ Page {
             ToolButton {
                 id: settingsButton
                 icon.source: "qrc:/icons/settings.svg"
-                onClicked: themeMenu.open()
+                onClicked: settingsMenu.open()
                 Component.onCompleted: pointerCursor.createObject(this)
             }
 
             Menu {
-                id: themeMenu
+                id: settingsMenu
+                width: 260
                 x: parent.width
                 y: parent.height
 
                 MenuItem {
                     text: "System Theme"
                     checkable: true
-                    checked: {
-                        var window = ApplicationWindow.window
-                        return window ? window.themeMode === Material.System : false
-                    }
-                    onTriggered: root.themeModeChanged(Material.System)
+                    checked: settingsManager ? settingsManager.theme === "system" : false
+                    onTriggered: settingsManager.setTheme("system")
                 }
                 MenuItem {
                     text: "Light Theme"
                     checkable: true
-                    checked: {
-                        var window = ApplicationWindow.window
-                        return window ? window.themeMode === Material.Light : false
-                    }
-                    onTriggered: root.themeModeChanged(Material.Light)
+                    checked: settingsManager ? settingsManager.theme === "light" : false
+                    onTriggered: settingsManager.setTheme("light")
                 }
                 MenuItem {
                     text: "Dark Theme"
                     checkable: true
-                    checked: {
-                        var window = ApplicationWindow.window
-                        return window ? window.themeMode === Material.Dark : false
-                    }
-                    onTriggered: root.themeModeChanged(Material.Dark)
+                    checked: settingsManager ? settingsManager.theme === "dark" : false
+                    onTriggered: settingsManager.setTheme("dark")
                 }
             }
         }
