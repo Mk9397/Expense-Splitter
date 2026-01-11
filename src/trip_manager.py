@@ -209,7 +209,7 @@ class TripManager(QObject):
 
     @Slot(str, result=bool)
     def deleteTrip(self, trip_id: str):
-        """Delete a trip by name"""
+        """Delete a trip"""
         for i, trip in enumerate(self._trips):
             if trip["id"] == trip_id:
                 self._trips.pop(i)

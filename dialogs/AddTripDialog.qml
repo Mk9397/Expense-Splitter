@@ -5,7 +5,7 @@ import QtQuick.Controls.Material
 
 Dialog {
     id: root
-    title: "Create New Trip"
+    title: "Create New Group"
     modal: true
     anchors.centerIn: parent
     width: parent.width * 0.88
@@ -20,7 +20,7 @@ Dialog {
         TextField {
             id: tripNameField
             Layout.fillWidth: true
-            placeholderText: "Trip name"
+            placeholderText: "Group name"
             font.pixelSize: 15
         }
 
@@ -33,7 +33,7 @@ Dialog {
         }
 
         Button {
-            text: "Create Trip"
+            text: "Create Group"
             Layout.fillWidth: true
             Layout.preferredHeight: 48
             font.weight: Font.DemiBold
@@ -48,11 +48,7 @@ Dialog {
                     root.close()
                 }
             }
-            Component.onCompleted: {
-                var hoverHandler = Qt.createQmlObject(
-                            'import QtQuick; HoverHandler { cursorShape: Qt.PointingHandCursor }',
-                            this)
-            }
+            Component.onCompleted: pointerCursor.createObject(this)
         }
     }
 }

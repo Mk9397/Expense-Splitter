@@ -57,11 +57,7 @@ Dialog {
                     root.close()
                 }
             }
-            Component.onCompleted: {
-                var hoverHandler = Qt.createQmlObject(
-                            'import QtQuick; HoverHandler { cursorShape: Qt.PointingHandCursor }',
-                            this)
-            }
+            Component.onCompleted: pointerCursor.createObject(this)
         }
     }
 }

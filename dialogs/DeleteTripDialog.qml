@@ -5,7 +5,7 @@ import QtQuick.Controls.Material
 
 Dialog {
     id: root
-    title: "Delete Trip"
+    title: "Delete Group"
     modal: true
     anchors.centerIn: parent
     width: parent.width * 0.88
@@ -41,11 +41,7 @@ Dialog {
                 Layout.preferredHeight: 48
                 flat: true
                 onClicked: root.close()
-                Component.onCompleted: {
-                    var hoverHandler = Qt.createQmlObject(
-                                'import QtQuick; HoverHandler { cursorShape: Qt.PointingHandCursor }',
-                                this)
-                }
+                Component.onCompleted: pointerCursor.createObject(this)
             }
 
             Button {
@@ -58,11 +54,7 @@ Dialog {
                     tripManager.deleteTrip(root.tripId)
                     root.close()
                 }
-                Component.onCompleted: {
-                    var hoverHandler = Qt.createQmlObject(
-                                'import QtQuick; HoverHandler { cursorShape: Qt.PointingHandCursor }',
-                                this)
-                }
+                Component.onCompleted: pointerCursor.createObject(this)
             }
         }
     }

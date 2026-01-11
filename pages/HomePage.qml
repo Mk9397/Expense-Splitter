@@ -24,7 +24,7 @@ Page {
             anchors.rightMargin: 8
 
             Label {
-                text: "Group Trip"
+                text: "Groups"
                 font.pixelSize: 24
                 font.weight: Font.DemiBold
                 Layout.fillWidth: true
@@ -58,22 +58,10 @@ Page {
                         currentCode: settingsManager ? settingsManager.currency : "NGN"
                         onActivated: settingsManager.setCurrency(
                                          globalCurrencyCombo.model[globalCurrencyCombo.currentIndex].code)
-
-                        Component.onCompleted: {
-                            pointerCursor.createObject(this)
-                            for (var i = 0; i < model.length; i++) {
-                                if (globalCurrencyCombo.model[i].code
-                                        === settingsManager.currency) {
-                                    globalCurrencyCombo.currentIndex = i
-                                    break
-                                }
-                            }
-                        }
                     }
                 }
 
                 MenuSeparator {}
-
                 Label {
                     text: "Theme"
                     font.pixelSize: 12
@@ -117,8 +105,8 @@ Page {
         }
 
         Label {
-            text: "Your Trips"
-            font.pixelSize: 18
+            text: "Your Groups"
+            font.pixelSize: 16
             font.weight: Font.DemiBold
             Layout.topMargin: 4
             opacity: 0.87
@@ -157,7 +145,7 @@ Page {
                 }
 
                 Label {
-                    text: "No Trips Yet"
+                    text: "No Groups Yet"
                     font.pixelSize: 22
                     font.weight: Font.DemiBold
                     Layout.alignment: Qt.AlignHCenter
@@ -165,7 +153,7 @@ Page {
                 }
 
                 Label {
-                    text: "Start planning your next adventure by creating your first group trip"
+                    text: "Start planning your next adventure by creating your first group"
                     font.pixelSize: 14
                     Layout.alignment: Qt.AlignHCenter
                     horizontalAlignment: Text.AlignHCenter
@@ -183,7 +171,7 @@ Page {
                 visible: totalTrips > 0 && tripList.count === 0
 
                 Label {
-                    text: "No trips found"
+                    text: "No groups found"
                     font.pixelSize: 18
                     font.weight: Font.DemiBold
                     Layout.alignment: Qt.AlignHCenter
@@ -249,7 +237,7 @@ Page {
         }
 
         Button {
-            text: totalTrips === 0 ? "Create Your First Trip" : "Add New Trip"
+            text: totalTrips === 0 ? "Create Your First Group" : "Add New Group"
             Layout.fillWidth: true
             Layout.preferredHeight: 52
             font.pixelSize: 15

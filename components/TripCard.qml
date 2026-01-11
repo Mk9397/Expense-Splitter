@@ -114,12 +114,7 @@ ItemDelegate {
             Layout.alignment: Qt.AlignVCenter
 
             onClicked: moreMenu.popup()
-
-            Component.onCompleted: {
-                var hoverHandler = Qt.createQmlObject(
-                            'import QtQuick; HoverHandler { cursorShape: Qt.PointingHandCursor }',
-                            moreButton)
-            }
+            Component.onCompleted: pointerCursor.createObject(this)
 
             Menu {
                 id: moreMenu
@@ -154,6 +149,7 @@ ItemDelegate {
                     event.accepted = true
                     moreButton.clicked()
                 }
+                cursorShape: "PointingHandCursor"
             }
         }
 
@@ -166,16 +162,5 @@ ItemDelegate {
         }
     }
 
-    Component.onCompleted: {
-        var cursor = Qt.createComponent("HoverHandler.qml")
-        if (cursor.status === Component.Ready) {
-            cursor.createObject(control, {
-                                    "cursorShape": Qt.PointingHandCursor
-                                })
-        } else {
-            var hoverHandler = Qt.createQmlObject(
-                        'import QtQuick; HoverHandler { cursorShape: Qt.PointingHandCursor }',
-                        control)
-        }
-    }
+    Component.onCompleted: pointerCursor.createObject(this)
 }

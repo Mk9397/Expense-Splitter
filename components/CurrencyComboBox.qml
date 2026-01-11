@@ -133,15 +133,5 @@ ComboBox {
         }
     }
 
-    // onActivated: settingsManager.setCurrency(model[currentIndex].code)
-
-    // Component.onCompleted: {
-    //     pointerCursor.createObject(this)
-    //     for (var i = 0; i < model.length; i++) {
-    //         if (model[i].code === settingsManager.currency) {
-    //             currentIndex = i
-    //             break
-    //         }
-    //     }
-    // }
+    Component.onCompleted: pointerCursor.createObject(this)
 }

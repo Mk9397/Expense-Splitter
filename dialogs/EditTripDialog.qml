@@ -6,7 +6,7 @@ import "../components"
 
 Dialog {
     id: root
-    title: "Edit Trip"
+    title: "Edit Group"
     modal: true
     anchors.centerIn: parent
     width: parent.width * 0.88
@@ -24,7 +24,7 @@ Dialog {
         TextField {
             id: editTripNameField
             Layout.fillWidth: true
-            placeholderText: "Trip name"
+            placeholderText: "Group name"
             text: root.tripName
             font.pixelSize: 15
         }
@@ -42,7 +42,6 @@ Dialog {
             id: editCurrencyCombo
             Layout.fillWidth: true
             currentCode: root.tripCurrency
-            Component.onCompleted: pointerCursor.createObject(this)
         }
 
         RowLayout {
