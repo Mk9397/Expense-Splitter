@@ -10,7 +10,11 @@ Page {
     id: root
     property string tripId: ""
     property string tripName: ""
+    property string tripCurrency: ""
     property int memberCount: 0
+
+    property string currencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
+                                                          tripCurrency) : ""
 
     property int totalExpenses: 0
 
@@ -57,17 +61,31 @@ Page {
 
                 MenuItem {
                     text: "View Settlement"
-                    onClicked: settlementDialog.open()
+                    onTriggered: settlementDialog.open()
                     Component.onCompleted: pointerCursor.createObject(this)
                 }
+
+                MenuSeparator {}
                 MenuItem {
                     text: "Edit Trip"
-                    onClicked: console.log("TODO: Edit Trip")
+                    icon.source: "qrc:/icons/edit.svg"
+                    onTriggered: editTripDialog.open()
                     Component.onCompleted: pointerCursor.createObject(this)
                 }
                 MenuItem {
+                    text: "Share Trip"
+                    icon.source: "qrc:/icons/share.svg"
+                    onTriggered: console.log(
+                                     "Yo, I've like been triggered and shi bruh")
+                    Component.onCompleted: pointerCursor.createObject(this)
+                }
+
+                MenuSeparator {}
+                MenuItem {
                     text: "Delete Trip"
-                    onClicked: console.log("TODO: Delete Trip")
+                    icon.source: "qrc:/icons/delete.svg"
+                    icon.color: Material.color(Material.Red)
+                    onTriggered: deleteTripDialog.open()
                     Component.onCompleted: pointerCursor.createObject(this)
                 }
             }
@@ -175,8 +193,9 @@ Page {
                         color: Material.accent
                     }
                     Label {
-                        text: "₦" + (totalAmount(
-                                         ) / root.memberCount).toFixed(0)
+                        text: currencySymbol + (totalAmount(
+                                                    ) / root.memberCount).toFixed(
+                                  0)
                         font.pixelSize: 36
                         font.weight: Font.Bold
                         color: Material.accent
@@ -234,6 +253,7 @@ Page {
                 expenseAmount: amount
                 expenseIcon: icon
                 paidBy: paid
+                tripCurrencySymbol: currencySymbol
                 memberCount: root.memberCount
                 onClicked: console.log("TODO: View/Edit Expense")
             }
@@ -269,7 +289,8 @@ Page {
     }
 
     function totalAmount() {
-        var expenses = tripManager.getTripById(tripId)["expenses"]
+        var expenses = tripManager ? tripManager.getTripById(
+                                         tripId)["expenses"] : []
         var total = 0
         expenses.forEach(expense => total += expense.amount)
         return total
@@ -297,6 +318,20 @@ Page {
         onExpenseCreated: function (expenseTitle, expenseAmount, paidBy) {
             tripManager.addExpense(tripId, expenseTitle, expenseAmount, paidBy)
         }
+    }
+
+    DeleteTripDialog {
+        id: deleteTripDialog
+        tripId: root.tripId
+        tripName: root.tripName
+    }
+
+    EditTripDialog {
+        id: editTripDialog
+        tripId: root.tripId
+        tripName: root.tripName
+        memberCount: root.memberCount
+        tripCurrency: root.tripCurrency
     }
 
     Component {

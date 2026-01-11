@@ -9,10 +9,12 @@ ItemDelegate {
     implicitHeight: 90
 
     property string expenseTitle: ""
-    property string expenseAmount: ""
+    property int expenseAmount: 0
     property string expenseIcon: ""
     property string paidBy: ""
     property int memberCount: 1
+    property string tripCurrencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
+                                                              ) : ""
 
     background: Rectangle {
         radius: 16
@@ -83,9 +85,7 @@ ItemDelegate {
                 font.pixelSize: 13
             }
             Label {
-                text: "₦" + (parseFloat(control.expenseAmount.replace(
-                                            /[₦,]/g,
-                                            "")) / control.memberCount).toFixed(
+                text: tripCurrencySymbol + (expenseAmount / control.memberCount).toFixed(
                           2) + " per person"
                 opacity: 0.7
                 font.pixelSize: 12
@@ -95,7 +95,7 @@ ItemDelegate {
         }
 
         Label {
-            text: control.expenseAmount
+            text: tripCurrencySymbol + control.expenseAmount.toFixed(2)
             font.weight: Font.Bold
             font.pixelSize: 19
             color: Material.accent
@@ -103,9 +103,5 @@ ItemDelegate {
         }
     }
 
-    Component.onCompleted: {
-        var hoverHandler = Qt.createQmlObject(
-                    'import QtQuick; HoverHandler { cursorShape: Qt.PointingHandCursor }',
-                    control)
-    }
+    Component.onCompleted: pointerCursor.createObject(this)
 }

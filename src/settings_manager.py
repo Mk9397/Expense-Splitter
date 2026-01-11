@@ -85,8 +85,10 @@ class SettingsManager(QObject):
         ]
 
     @Slot(str, result=str)
-    def getCurrencySymbol(self, code):
+    def getCurrencySymbol(self, code: str = None):
         """Get currency symbol for a given code"""
+        if code is None:
+            code = self.currency
         currencies = self.getAvailableCurrencies()
         for curr in currencies:
             if curr["code"] == code:

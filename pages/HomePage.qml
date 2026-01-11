@@ -289,15 +289,16 @@ Page {
 
                 delegate: TripCard {
                     width: ListView.view.width
-                    tripId: model.id
-                    tripName: model.name
-                    memberCount: model.members
+                    tripId: id
+                    tripName: name
+                    memberCount: members
 
                     onClicked: {
                         var stack = root.StackView.view
                         stack.push("TripPage.qml", {
                                        "tripId": id,
                                        "tripName": name,
+                                       "tripCurrency": currency,
                                        "memberCount": members
                                    })
                     }
