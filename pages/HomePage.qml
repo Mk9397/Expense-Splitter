@@ -7,8 +7,8 @@ import "../dialogs"
 
 Page {
     id: root
-    title: "Trips"
-    property int totalTrips: 0
+    title: "Groups"
+    property int totalTrips: tripManager ? tripManager.tripCount : 0
 
     background: Rectangle {
         color: Material.background
@@ -55,7 +55,7 @@ Page {
                 MenuItem {
                     contentItem: CurrencyComboBox {
                         id: globalCurrencyCombo
-
+                        currentCode: settingsManager ? settingsManager.currency : "NGN"
                         onActivated: settingsManager.setCurrency(
                                          globalCurrencyCombo.model[globalCurrencyCombo.currentIndex].code)
 
@@ -111,88 +111,9 @@ Page {
         spacing: 16
 
         // Search Bar
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 0
+        SearchBar {
+            id: searchBar
             visible: totalTrips > 0
-
-            Rectangle {
-                Layout.fillWidth: true
-                height: 48
-                radius: 24
-                color: ApplicationWindow.window.cardBackground
-                border.color: searchField.activeFocus ? Material.accent : ApplicationWindow.window.cardBorder
-                border.width: searchField.activeFocus ? 2 : 1
-
-                Behavior on border.color {
-                    ColorAnimation {
-                        duration: 200
-                    }
-                }
-                Behavior on border.width {
-                    NumberAnimation {
-                        duration: 200
-                    }
-                }
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 16
-                    anchors.rightMargin: 16
-                    spacing: 12
-
-                    Image {
-                        source: "qrc:/icons/search.svg"
-                        sourceSize.width: 20
-                        sourceSize.height: 20
-                        opacity: searchField.activeFocus ? 0.87 : 0.54
-                        Layout.alignment: Qt.AlignVCenter
-
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: 200
-                            }
-                        }
-                    }
-
-                    TextField {
-                        id: searchField
-                        placeholderText: searchField.activeFocus
-                                         || searchField.text.length > 0 ? "" : "Search trips..."
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        font.pixelSize: 15
-                        verticalAlignment: TextInput.AlignVCenter
-
-                        background: Item {}
-
-                        color: Material.foreground
-                        placeholderTextColor: Material.hintTextColor
-
-                        onTextChanged: refreshTripList()
-                    }
-
-                    ToolButton {
-                        visible: searchField.text.length > 0
-                        opacity: visible ? 1 : 0
-                        icon.source: "qrc:/icons/close.svg"
-                        icon.width: 18
-                        icon.height: 18
-                        implicitWidth: 32
-                        implicitHeight: 32
-                        Layout.alignment: Qt.AlignVCenter
-
-                        onClicked: searchField.clear()
-                        Component.onCompleted: pointerCursor.createObject(this)
-
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: 150
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         Label {
@@ -285,7 +206,8 @@ Page {
                 clip: true
                 visible: count > 0
 
-                model: ListModel {}
+                // model: ListModel {}
+                model: tripManager ? tripManager.proxyModel : null
 
                 delegate: TripCard {
                     width: ListView.view.width
@@ -336,37 +258,6 @@ Page {
             highlighted: true
             onClicked: addTripDialog.open()
             Component.onCompleted: pointerCursor.createObject(this)
-        }
-    }
-
-    // Refresh list from Python backend
-    function refreshTripList() {
-        tripList.model.clear()
-        var trips = tripManager.trips
-        totalTrips = trips.length
-        var searchText = searchField.text.toLowerCase()
-
-        for (var i = 0; i < trips.length; i++) {
-            if (searchText === "" || trips[i].name.toLowerCase().indexOf(
-                        searchText) !== -1) {
-                tripList.model.append({
-                                          "name": trips[i].name,
-                                          "members": trips[i].members
-                                      })
-            }
-        }
-    }
-
-    // Load trips on startup
-    Component.onCompleted: {
-        refreshTripList()
-    }
-
-    // Listen for changes from Python
-    Connections {
-        target: tripManager
-        function onTripsChanged() {
-            refreshTripList()
         }
     }
 
