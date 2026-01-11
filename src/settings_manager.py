@@ -14,6 +14,9 @@ class SettingsManager(QObject):
     currencyChanged = Signal()
     languageChanged = Signal()
 
+    VALID_THEMES = {"system", "light", "dark"}
+    VALID_CURRENCIES = {"USD", "EUR", "GBP", "JPY", "NGN", "CAD", "AUD"}
+
     def __init__(self):
         super().__init__()
         self.settings = QSettings("Bells Uni", "ExpenseSplitter")
@@ -35,7 +38,10 @@ class SettingsManager(QObject):
             self.themeChanged.emit()
 
     @Slot(str)
-    def setTheme(self, theme):
+    def setTheme(self, theme: str):
+        if theme not in self.VALID_THEMES:
+            print(f"Warning: Invalid theme '{theme}', using 'system'")
+            theme = "system"
         self.theme = theme
 
     # Currency property
@@ -51,7 +57,10 @@ class SettingsManager(QObject):
             self.currencyChanged.emit()
 
     @Slot(str)
-    def setCurrency(self, currency):
+    def setCurrency(self, currency: str):
+        if currency not in self.VALID_CURRENCIES:
+            print(f"Warning: Invalid currency '{currency}', using 'NGN'")
+            currency = "NGN"
         self.currency = currency
 
     # Language property
