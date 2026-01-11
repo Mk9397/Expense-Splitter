@@ -16,7 +16,7 @@ Page {
     property string currencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
                                                           tripCurrency) : ""
 
-    property int totalExpenses: 0
+    property real totalAmount: tripManager ? tripManager.tripTotal : 0
 
     background: Rectangle {
         color: Material.background
@@ -48,7 +48,6 @@ Page {
             }
 
             ToolButton {
-                icon.name: 'preferences-other'
                 icon.source: 'qrc:/icons/more_vert.svg'
                 onClicked: tripOptionsMenu.open()
                 Component.onCompleted: pointerCursor.createObject(this)
@@ -136,7 +135,7 @@ Page {
                     }
                     Label {
                         text: root.memberCount.toString()
-                        font.pixelSize: 36
+                        font.pixelSize: 28
                         font.weight: Font.Bold
                         color: Material.accent
                     }
@@ -164,8 +163,8 @@ Page {
                         color: Material.accent
                     }
                     Label {
-                        text: totalAmount()
-                        font.pixelSize: 36
+                        text: currencySymbol + totalAmount.toFixed(2)
+                        font.pixelSize: 28
                         font.weight: Font.Bold
                         color: Material.accent
                     }
@@ -193,10 +192,9 @@ Page {
                         color: Material.accent
                     }
                     Label {
-                        text: currencySymbol + (totalAmount(
-                                                    ) / root.memberCount).toFixed(
-                                  0)
-                        font.pixelSize: 36
+                        text: currencySymbol + (totalAmount / root.memberCount).toFixed(
+                                  2)
+                        font.pixelSize: 28
                         font.weight: Font.Bold
                         color: Material.accent
                     }
@@ -245,14 +243,15 @@ Page {
             spacing: 12
             clip: true
 
-            model: ListModel {}
+            // model: ListModel {}
+            model: tripManager ? tripManager.expenseModel : null
 
             delegate: ExpenseCard {
                 width: ListView.view.width
                 expenseTitle: title
                 expenseAmount: amount
-                expenseIcon: icon
-                paidBy: paid
+                expenseIcon: "💵"
+                paidBy: paid_by
                 tripCurrencySymbol: currencySymbol
                 memberCount: root.memberCount
                 onClicked: console.log("TODO: View/Edit Expense")
@@ -272,42 +271,7 @@ Page {
         }
     }
 
-    // Refresh list from Python backend
-    function refreshExpenseList() {
-        expenseList.model.clear()
-        var expenses = tripManager.getTripById(tripId)["expenses"]
-        totalExpenses = expenses.length
-
-        expenses.forEach(expense => {
-                             expenseList.model.append({
-                                                          "id": expense.id,
-                                                          "title": expense.title,
-                                                          "amount": expense.amount,
-                                                          "paid": expense.paid_by
-                                                      })
-                         })
-    }
-
-    function totalAmount() {
-        var expenses = tripManager ? tripManager.getTripById(
-                                         tripId)["expenses"] : []
-        var total = 0
-        expenses.forEach(expense => total += expense.amount)
-        return total
-    }
-
-    // Load expenses on startup
-    Component.onCompleted: {
-        refreshExpenseList()
-    }
-
-    // Listen for changes from Python
-    Connections {
-        target: tripManager
-        function onTripsChanged() {
-            refreshExpenseList()
-        }
-    }
+    Component.onCompleted: tripManager.setCurrentTrip(tripId)
 
     SettlementDialog {
         id: settlementDialog
