@@ -9,9 +9,9 @@ import "../dialogs"
 Page {
     id: root
     property string tripId: ""
-    property string tripName: ""
-    property string tripCurrency: ""
-    property int memberCount: 0
+    property string tripName: tripManager ? tripManager.currentTrip.name : ""
+    property string tripCurrency: tripManager ? tripManager.currentTrip.currency : ""
+    property int memberCount: tripManager ? tripManager.currentTrip.member_count : 0
 
     property string currencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
                                                           tripCurrency) : ""

@@ -201,22 +201,19 @@ Page {
                     width: ListView.view.width
                     tripId: id
                     tripName: name
-                    memberCount: members
+                    memberCount: member_count
 
                     onClicked: {
                         var stack = root.StackView.view
                         stack.push("TripPage.qml", {
-                                       "tripId": id,
-                                       "tripName": name,
-                                       "tripCurrency": currency,
-                                       "memberCount": members
+                                       "tripId": id
                                    })
                     }
 
                     onEditTrip: {
                         editTripDialog.tripId = id
                         editTripDialog.tripName = name
-                        editTripDialog.memberCount = members
+                        editTripDialog.memberCount = member_count
                         editTripDialog.tripCurrency = currency
                         editTripDialog.open()
                     }

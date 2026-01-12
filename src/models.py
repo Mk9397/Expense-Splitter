@@ -4,7 +4,7 @@ from PySide6.QtCore import QAbstractListModel, QModelIndex, QSortFilterProxyMode
 class TripModel(QAbstractListModel):
     IdRole = Qt.UserRole + 1
     NameRole = Qt.UserRole + 2
-    MembersRole = Qt.UserRole + 3
+    MemberCountRole = Qt.UserRole + 3
     CurrencyRole = Qt.UserRole + 4
 
     def __init__(self, trips_list, parent=None):
@@ -23,8 +23,8 @@ class TripModel(QAbstractListModel):
             return trip["id"]
         if role == self.NameRole:
             return trip["name"]
-        if role == self.MembersRole:
-            return trip["members"]
+        if role == self.MemberCountRole:
+            return trip["member_count"]
         if role == self.CurrencyRole:
             return trip["currency"]
         return None
@@ -33,7 +33,7 @@ class TripModel(QAbstractListModel):
         return {
             self.IdRole: b"id",
             self.NameRole: b"name",
-            self.MembersRole: b"members",
+            self.MemberCountRole: b"member_count",
             self.CurrencyRole: b"currency",
         }
 

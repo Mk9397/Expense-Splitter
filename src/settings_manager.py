@@ -76,7 +76,7 @@ class SettingsManager(QObject):
             self.languageChanged.emit()
 
     @Slot(str)
-    def setLanguage(self, language):
+    def setLanguage(self, language: str):
         self.language = language
 
     # Helper methods

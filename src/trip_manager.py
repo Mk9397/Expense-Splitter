@@ -17,6 +17,7 @@ class TripManager(QObject):
     """Backend manager for trips with model integration"""
 
     tripsChanged = Signal()
+    currentTripChanged = Signal()
     expensesChanged = Signal()
 
     def __init__(self):
@@ -24,6 +25,7 @@ class TripManager(QObject):
         self.settings = QSettings("Bells Uni", "ExpenseSplitter")
         self._trips = []
         self._current_trip_id = ""
+        self._current_trip = {}
 
         self.load_trips()
 
@@ -38,6 +40,11 @@ class TripManager(QObject):
         trips_json = self.settings.value("trips", "[]")
         try:
             self._trips = json.loads(trips_json)
+            for trip in self._trips:
+                if "member_count" not in trip:
+                    trip["member_count"] = trip["members"]
+                    trip["members"] = []
+            self.save_trips()
         except json.JSONDecodeError:
             self._trips = []
 
@@ -50,7 +57,8 @@ class TripManager(QObject):
         """Save trips to storage"""
         trips_json = json.dumps(self._trips)
         self.settings.setValue("trips", trips_json)
-        self._source_model.refresh()
+        if hasattr(self, "_source_model"):
+            self._source_model.refresh()
         self.tripsChanged.emit()
 
     @Slot(str)
@@ -64,6 +72,9 @@ class TripManager(QObject):
         self._current_trip_id = trip_id
         trip = self.getTripById(trip_id)
         if trip:
+            self._current_trip = trip
+            self.currentTripChanged.emit()
+
             self._expense_model.setExpenses(trip.get("expenses", []))
             self.expensesChanged.emit()
 
@@ -77,6 +88,11 @@ class TripManager(QObject):
         """Get total number of trips"""
         return len(self._trips)
 
+    @Property("QVariantMap", notify=currentTripChanged)
+    def currentTrip(self):
+        """Get current trip"""
+        return self._current_trip
+
     @Property(QObject, notify=tripsChanged)
     def proxyModel(self):
         """Get the proxy model for trips"""
@@ -88,13 +104,14 @@ class TripManager(QObject):
         return self._expense_model
 
     @Slot(str, int, result=str)
-    def addTrip(self, name: str, members: int):
+    def addTrip(self, name: str, member_count: int):
         """Add a new trip"""
         trip = {
             "id": str(uuid.uuid4()),
             "name": name.strip(),
             "currency": self.settings.value("currency", "NGN"),
-            "members": members,
+            "member_count": member_count,
+            "members": [],
             "expenses": [],
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat(),
@@ -110,19 +127,27 @@ class TripManager(QObject):
             if trip["id"] == trip_id:
                 self._trips.pop(i)
                 self.save_trips()
+
+                if self._current_trip_id == trip_id:
+                    self._current_trip = {}
+                    self._current_trip_id = ""
+                    self.currentTripChanged.emit()
                 return True
         return False
 
     @Slot(str, str, int, str, result=bool)
-    def editTrip(self, trip_id: str, name: str, members: int, currency: str):
+    def editTrip(self, trip_id: str, name: str, member_count: int, currency: str):
         """Edit a trip's details"""
         for trip in self._trips:
             if trip["id"] == trip_id:
                 trip["name"] = name.strip()
                 trip["currency"] = currency
-                trip["members"] = members
+                trip["member_count"] = member_count
                 trip["updated_at"] = datetime.now().isoformat()
                 self.save_trips()
+
+                if self._current_trip_id == trip_id:
+                    self.currentTripChanged.emit()
                 return True
         return False
 
