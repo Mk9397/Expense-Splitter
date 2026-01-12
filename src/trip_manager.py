@@ -167,70 +167,68 @@ class TripManager(QObject):
                 return trip
         return {}
 
-    @Slot(str, str, float, str)
-    def addExpense(self, trip_id, title, amount, paid_by):
+    @Slot(str, float, str, result=str)
+    def addExpense(self, title: str, amount: float, member_id: str):
         """Add an expense to a specific trip"""
-        for trip in self._trips:
-            if trip["id"] == trip_id:
-                expense = {
-                    "id": str(uuid.uuid4()),
-                    "title": title,
-                    "amount": amount,
-                    "paid_by": paid_by,
-                    "created_at": datetime.now().isoformat(),
-                }
-                trip["expenses"].append(expense)
-                trip["updated_at"] = datetime.now().isoformat()
+        if not self._current_trip:
+            return ""
+
+        expense = {
+            "id": str(uuid.uuid4()),
+            "title": title,
+            "amount": amount,
+            "paid_by": member_id,
+            "created_at": datetime.now().isoformat(),
+        }
+        self._current_trip["expenses"].append(expense)
+        self._current_trip["updated_at"] = datetime.now().isoformat()
+        self.save_trips()
+
+        self._expense_model.setExpenses(self._current_trip["expenses"])
+        self.expensesChanged.emit()
+
+        return expense["id"]
+
+    @Slot(str, result=bool)
+    def deleteExpense(self, expense_id: str):
+        """Delete an expense from a trip"""
+        if not self._current_trip:
+            return False
+
+        for i, expense in enumerate(self._current_trip["expenses"]):
+            if expense["id"] == expense_id:
+                self._current_trip["expenses"].pop(i)
                 self.save_trips()
 
-                if trip_id == self._current_trip_id:
-                    self._expense_model.setExpenses(trip["expenses"])
-                    self.expensesChanged.emit()
-
-                return expense["id"]
-        return ""
-
-    @Slot(str, str, result=bool)
-    def deleteExpense(self, trip_id, expense_id):
-        """Delete an expense from a trip"""
-        for trip in self._trips:
-            if trip["id"] == trip_id:
-                for i, expense in enumerate(trip["expenses"]):
-                    if expense["id"] == expense_id:
-                        trip["expenses"].pop(i)
-                        self.save_trips()
-
-                        if trip_id == self._current_trip_id:
-                            self._expense_model.setExpenses(trip["expenses"])
-                            self.expensesChanged.emit()
-
-                        return True
+                self._expense_model.setExpenses(self._current_trip["expenses"])
+                self.expensesChanged.emit()
+                return True
         return False
 
-    @Slot(str, str, str, float, str, result=bool)
-    def editExpense(self, trip_id, expense_id, title, amount, paid_by):
+    @Slot(str, str, float, str, result=bool)
+    def editExpense(self, expense_id: str, title: str, amount: float, paid_by: str):
         """Edit an expense in a specific trip"""
-        for trip in self._trips:
-            if trip["id"] == trip_id:
-                for expense in trip["expenses"]:
-                    if expense["id"] == expense_id:
-                        expense["title"] = title
-                        expense["amount"] = amount
-                        expense["paid_by"] = paid_by
-                        trip["updated_at"] = datetime.now().isoformat()
-                        self.save_trips()
+        if not self._current_trip:
+            return False
 
-                        if trip_id == self._current_trip_id:
-                            self._expense_model.setExpenses(trip["expenses"])
-                            self.expensesChanged.emit()
+        for expense in self._current_trip["expenses"]:
+            if expense["id"] == expense_id:
+                expense["title"] = title
+                expense["amount"] = amount
+                expense["paid_by"] = paid_by
+                self._current_trip["updated_at"] = datetime.now().isoformat()
+                self.save_trips()
 
-                        return True
+                self._expense_model.setExpenses(self._current_trip["expenses"])
+                self.expensesChanged.emit()
+                return True
         return False
 
     @Property(float, notify=expensesChanged)
     def tripTotal(self):
-        """Get total expenses for a trip"""
-        trip = self.getTripById(self._current_trip_id)
-        if trip:
-            return sum(expense["amount"] for expense in trip.get("expenses", []))
-        return 0.0
+        """Get total expenses for current trip"""
+        if not self._current_trip:
+            return 0.0
+        return sum(
+            expense["amount"] for expense in self._current_trip.get("expenses", [])
+        )

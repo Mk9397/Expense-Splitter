@@ -280,7 +280,7 @@ Page {
     AddExpenseDialog {
         id: addExpenseDialog
         onExpenseCreated: function (expenseTitle, expenseAmount, paidBy) {
-            tripManager.addExpense(tripId, expenseTitle, expenseAmount, paidBy)
+            tripManager.addExpense(expenseTitle, expenseAmount, paidBy)
         }
     }
 
@@ -288,6 +288,11 @@ Page {
         id: deleteTripDialog
         tripId: root.tripId
         tripName: root.tripName
+
+        onTripDeleted: function (tripId) {
+            root.StackView.view.pop()
+            tripManager.deleteTrip(tripId)
+        }
     }
 
     EditTripDialog {
@@ -296,6 +301,10 @@ Page {
         tripName: root.tripName
         memberCount: root.memberCount
         tripCurrency: root.tripCurrency
+
+        onTripEdited: function (tripId, tripName, memberCount, tripCurrency) {
+            tripManager.editTrip(tripId, tripName, memberCount, tripCurrency)
+        }
     }
 
     Component {

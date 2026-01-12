@@ -17,6 +17,8 @@ Dialog {
     property int memberCount: 0
     property string tripCurrency: ""
 
+    signal tripEdited(string tripId, string tripName, int memberCount, string tripCurrency)
+
     ColumnLayout {
         width: parent.width
         spacing: 16
@@ -63,7 +65,7 @@ Dialog {
                 Layout.preferredHeight: 48
                 highlighted: true
                 onClicked: {
-                    tripManager.editTrip(
+                    root.tripEdited(
                                 root.tripId, editTripNameField.text,
                                 editMembersField.text,
                                 editCurrencyCombo.model[editCurrencyCombo.currentIndex].code)

@@ -14,6 +14,8 @@ Dialog {
     property string tripId: ""
     property string tripName: ""
 
+    signal tripDeleted(string tripId)
+
     ColumnLayout {
         width: parent.width
         spacing: 16
@@ -51,7 +53,7 @@ Dialog {
                 Material.background: Material.Red
                 Material.foreground: "white"
                 onClicked: {
-                    tripManager.deleteTrip(root.tripId)
+                    root.tripDeleted(root.tripId)
                     root.close()
                 }
                 Component.onCompleted: pointerCursor.createObject(this)

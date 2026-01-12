@@ -255,10 +255,16 @@ Page {
 
     DeleteTripDialog {
         id: deleteTripDialog
+        onTripDeleted: function (tripId) {
+            tripManager.deleteTrip(tripId)
+        }
     }
 
     EditTripDialog {
         id: editTripDialog
+        onTripEdited: function (tripId, tripName, memberCount, tripCurrency) {
+            tripManager.editTrip(tripId, tripName, memberCount, tripCurrency)
+        }
     }
 
     Component {
