@@ -64,7 +64,9 @@ class ExpenseModel(QAbstractListModel):
     TitleRole = Qt.UserRole + 2
     AmountRole = Qt.UserRole + 3
     PaidByRole = Qt.UserRole + 4
-    CreatedAtRole = Qt.UserRole + 5
+    SplitTypeRole = Qt.UserRole + 5
+    ExcludedRole = Qt.UserRole + 6
+    CreatedAtRole = Qt.UserRole + 7
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -92,6 +94,10 @@ class ExpenseModel(QAbstractListModel):
             return expense["amount"]
         if role == self.PaidByRole:
             return expense["paid_by"]
+        if role == self.SplitTypeRole:
+            return expense["split_type"]
+        if role == self.ExcludedRole:
+            return expense["excluded"]
         if role == self.CreatedAtRole:
             return expense.get("created_at", "")
         return None
@@ -102,6 +108,8 @@ class ExpenseModel(QAbstractListModel):
             self.TitleRole: b"title",
             self.AmountRole: b"amount",
             self.PaidByRole: b"paid_by",
+            self.SplitTypeRole: b"split_type",
+            self.ExcludedRole: b"excluded",
             self.CreatedAtRole: b"created_at",
         }
 

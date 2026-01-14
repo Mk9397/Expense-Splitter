@@ -190,8 +190,15 @@ class TripManager(QObject):
                 return trip
         return {}
 
-    @Slot(str, float, str, result=str)
-    def addExpense(self, title: str, amount: float, member_id: str):
+    @Slot(str, float, str, str, "QVariantList", result=str)
+    def addExpense(
+        self,
+        title: str,
+        amount: float,
+        member_id: str,
+        split_type: str,
+        excluded: list = [],
+    ):
         """Add an expense to a specific trip"""
         if not self._current_trip:
             return ""
@@ -201,6 +208,8 @@ class TripManager(QObject):
             "title": title,
             "amount": amount,
             "paid_by": member_id,
+            "split_type": split_type,
+            "excluded": excluded,
             "created_at": datetime.now().isoformat(),
         }
         self._current_trip["expenses"].append(expense)
@@ -228,8 +237,16 @@ class TripManager(QObject):
                 return True
         return False
 
-    @Slot(str, str, float, str, result=bool)
-    def editExpense(self, expense_id: str, title: str, amount: float, paid_by: str):
+    @Slot(str, str, float, str, str, "QVariantList", result=bool)
+    def editExpense(
+        self,
+        expense_id: str,
+        title: str,
+        amount: float,
+        member_id: str,
+        split_type: str,
+        excluded: list,
+    ):
         """Edit an expense in a specific trip"""
         if not self._current_trip:
             return False
@@ -238,7 +255,9 @@ class TripManager(QObject):
             if expense["id"] == expense_id:
                 expense["title"] = title
                 expense["amount"] = amount
-                expense["paid_by"] = paid_by
+                expense["paid_by"] = member_id
+                expense["split_type"] = split_type
+                expense["excluded"] = excluded
                 self._current_trip["updated_at"] = datetime.now().isoformat()
                 self.save_trips()
 
