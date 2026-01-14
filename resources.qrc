@@ -22,5 +22,9 @@
         <file>icons/edit.svg</file>
         <file>icons/remove.svg</file>
         <file>icons/check.svg</file>
+        <file>icons/group.svg</file>
+        <file>icons/group_add.svg</file>
+        <file>icons/block.svg</file>
+        <file>icons/arrow_right_alt.svg</file>
     </qresource>
 </RCC>
