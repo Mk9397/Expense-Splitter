@@ -16,7 +16,7 @@ Page {
 
     header: ToolBar {
         Material.elevation: 2
-        height: 64
+        height: 56
 
         RowLayout {
             anchors.fill: parent
@@ -213,7 +213,7 @@ Page {
                     onEditTrip: {
                         editTripDialog.tripId = id
                         editTripDialog.tripName = name
-                        editTripDialog.memberCount = member_count
+                        editTripDialog.members = members
                         editTripDialog.tripCurrency = currency
                         editTripDialog.open()
                     }
@@ -248,8 +248,8 @@ Page {
 
     AddTripDialog {
         id: addTripDialog
-        onTripCreated: function (tripName, memberCount) {
-            tripManager.addTrip(tripName, memberCount)
+        onTripCreated: function (tripName) {
+            tripManager.addTrip(tripName)
         }
     }
 
@@ -262,8 +262,8 @@ Page {
 
     EditTripDialog {
         id: editTripDialog
-        onTripEdited: function (tripId, tripName, memberCount, tripCurrency) {
-            tripManager.editTrip(tripId, tripName, memberCount, tripCurrency)
+        onTripEdited: function (tripId, tripName, members, tripCurrency) {
+            tripManager.editTrip(tripId, tripName, members, tripCurrency)
         }
     }
 

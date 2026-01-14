@@ -11,12 +11,17 @@ Page {
     property string tripId: ""
     property string tripName: tripManager ? tripManager.currentTrip.name : ""
     property string tripCurrency: tripManager ? tripManager.currentTrip.currency : ""
-    property int memberCount: tripManager ? tripManager.currentTrip.member_count : 0
+    property int memberCount: tripManager ? tripManager.memberCount : 0
 
     property string currencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
                                                           tripCurrency) : ""
 
-    property real totalAmount: tripManager ? tripManager.tripTotal : 0
+    property real totalAmount: tripManager ? tripManager.totalTripAmount : 0
+    property var memberModel: tripManager ? tripManager.memberModel : null
+
+    function formatAmount(amount) {
+        return Number(amount).toLocaleString(Qt.locale(), 'f', 2)
+    }
 
     background: Rectangle {
         color: Material.background
@@ -24,13 +29,13 @@ Page {
 
     header: ToolBar {
         Material.elevation: 2
-        height: 64
+        height: 56
 
         RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: 8
-            anchors.rightMargin: 16
-            spacing: 4
+            anchors.leftMargin: 4
+            anchors.rightMargin: 8
+            spacing: 0
 
             ToolButton {
                 icon.source: "qrc:/icons/chevron_left.svg"
@@ -42,7 +47,7 @@ Page {
                 text: root.tripName
                 Layout.alignment: Qt.AlignVCenter
                 font.weight: Font.DemiBold
-                font.pixelSize: 19
+                font.pixelSize: 18
                 Layout.fillWidth: true
                 elide: Text.ElideRight
             }
@@ -68,7 +73,12 @@ Page {
                 MenuItem {
                     text: "Edit Trip"
                     icon.source: "qrc:/icons/edit.svg"
-                    onTriggered: editTripDialog.open()
+                    onTriggered: {
+                        editTripDialog.tripName = root.tripName
+                        editTripDialog.members = tripManager.membersList
+                        editTripDialog.tripCurrency = root.tripCurrency
+                        editTripDialog.open()
+                    }
                     Component.onCompleted: pointerCursor.createObject(this)
                 }
                 MenuItem {
@@ -84,7 +94,10 @@ Page {
                     text: "Delete Trip"
                     icon.source: "qrc:/icons/delete.svg"
                     icon.color: Material.color(Material.Red)
-                    onTriggered: deleteTripDialog.open()
+                    onTriggered: {
+                        deleteTripDialog.tripName = root.tripName
+                        deleteTripDialog.open()
+                    }
                     Component.onCompleted: pointerCursor.createObject(this)
                 }
             }
@@ -287,7 +300,6 @@ Page {
     DeleteTripDialog {
         id: deleteTripDialog
         tripId: root.tripId
-        tripName: root.tripName
 
         onTripDeleted: function (tripId) {
             root.StackView.view.pop()
@@ -298,12 +310,9 @@ Page {
     EditTripDialog {
         id: editTripDialog
         tripId: root.tripId
-        tripName: root.tripName
-        memberCount: root.memberCount
-        tripCurrency: root.tripCurrency
 
-        onTripEdited: function (tripId, tripName, memberCount, tripCurrency) {
-            tripManager.editTrip(tripId, tripName, memberCount, tripCurrency)
+        onTripEdited: function (tripId, tripName, members, tripCurrency) {
+            tripManager.editTrip(tripId, tripName, members, tripCurrency)
         }
     }
 

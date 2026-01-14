@@ -248,7 +248,7 @@ class TripManager(QObject):
         return False
 
     @Property(float, notify=expensesChanged)
-    def tripTotal(self):
+    def totalTripAmount(self):
         """Get total expenses for current trip"""
         if not self._current_trip:
             return 0.0

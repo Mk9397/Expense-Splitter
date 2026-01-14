@@ -11,7 +11,7 @@ Dialog {
     width: parent.width * 0.88
     padding: 24
 
-    signal tripCreated(string tripName, int memberCount)
+    signal tripCreated(string tripName)
 
     ColumnLayout {
         width: parent.width
@@ -24,14 +24,6 @@ Dialog {
             font.pixelSize: 15
         }
 
-        TextField {
-            id: membersField
-            Layout.fillWidth: true
-            placeholderText: "Number of members"
-            inputMethodHints: Qt.ImhDigitsOnly
-            font.pixelSize: 15
-        }
-
         Button {
             text: "Create Group"
             Layout.fillWidth: true
@@ -39,12 +31,9 @@ Dialog {
             font.weight: Font.DemiBold
             highlighted: true
             onClicked: {
-                if (tripNameField.text.trim() !== "" && membersField.text.trim(
-                            ) !== "") {
-                    root.tripCreated(tripNameField.text,
-                                     parseInt(membersField.text) || 0)
+                if (tripNameField.text.trim() !== "") {
+                    root.tripCreated(tripNameField.text)
                     tripNameField.clear()
-                    membersField.clear()
                     root.close()
                 }
             }
