@@ -64,13 +64,6 @@ Page {
                 y: parent.height
 
                 MenuItem {
-                    text: "View Settlement"
-                    onTriggered: settlementDialog.open()
-                    Component.onCompleted: pointerCursor.createObject(this)
-                }
-
-                MenuSeparator {}
-                MenuItem {
                     text: "Edit Trip"
                     icon.source: "qrc:/icons/edit.svg"
                     onTriggered: {
@@ -106,15 +99,17 @@ Page {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 24
-        anchors.topMargin: 20
-        spacing: 20
+        spacing: 0
 
         // Trip Stats Card
         Rectangle {
             Layout.fillWidth: true
-            height: 120
-            radius: 20
+            Layout.margins: 16
+            Layout.topMargin: 16
+            Layout.bottomMargin: 12
+
+            height: 88
+            radius: 16
             color: ApplicationWindow.window.accentCardBackground
             border.color: ApplicationWindow.window.accentCardBorder
             border.width: 1
@@ -130,17 +125,17 @@ Page {
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 24
+                anchors.margins: 20
                 spacing: 12
 
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
-                    spacing: 6
+                    spacing: 4
 
                     Label {
                         text: "MEMBERS"
-                        font.pixelSize: 10
+                        font.pixelSize: 9
                         font.weight: Font.Bold
                         font.letterSpacing: 0.5
                         opacity: 0.65
@@ -148,7 +143,7 @@ Page {
                     }
                     Label {
                         text: root.memberCount.toString()
-                        font.pixelSize: 28
+                        font.pixelSize: 20
                         font.weight: Font.Bold
                         color: Material.accent
                     }
@@ -157,27 +152,27 @@ Page {
                 Rectangle {
                     width: 1
                     Layout.fillHeight: true
-                    Layout.topMargin: 16
-                    Layout.bottomMargin: 16
+                    Layout.topMargin: 12
+                    Layout.bottomMargin: 12
                     color: ApplicationWindow.window.accentCardBorder
                 }
 
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
-                    spacing: 6
+                    spacing: 4
 
                     Label {
                         text: "TOTAL"
-                        font.pixelSize: 10
+                        font.pixelSize: 9
                         font.weight: Font.Bold
                         font.letterSpacing: 0.5
                         opacity: 0.65
                         color: Material.accent
                     }
                     Label {
-                        text: currencySymbol + totalAmount.toFixed(2)
-                        font.pixelSize: 28
+                        text: currencySymbol + formatAmount(totalAmount)
+                        font.pixelSize: 20
                         font.weight: Font.Bold
                         color: Material.accent
                     }
@@ -186,28 +181,32 @@ Page {
                 Rectangle {
                     width: 1
                     Layout.fillHeight: true
-                    Layout.topMargin: 16
-                    Layout.bottomMargin: 16
+                    Layout.topMargin: 12
+                    Layout.bottomMargin: 12
                     color: ApplicationWindow.window.accentCardBorder
                 }
 
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
-                    spacing: 6
+                    spacing: 4
 
                     Label {
                         text: "PER PERSON"
-                        font.pixelSize: 10
+                        font.pixelSize: 9
                         font.weight: Font.Bold
                         font.letterSpacing: 0.5
                         opacity: 0.65
                         color: Material.accent
                     }
                     Label {
-                        text: currencySymbol + (totalAmount / root.memberCount).toFixed(
-                                  2)
-                        font.pixelSize: 28
+                        text: {
+                            let share = 0
+                            if (root.memberCount)
+                                share = totalAmount / root.memberCount
+                            return currencySymbol + formatAmount(share)
+                        }
+                        font.pixelSize: 20
                         font.weight: Font.Bold
                         color: Material.accent
                     }
@@ -215,85 +214,149 @@ Page {
             }
         }
 
-        RowLayout {
+        TabBar {
+            id: tabBar
             Layout.fillWidth: true
-            spacing: 12
+            Layout.leftMargin: 16
+            Layout.rightMargin: 16
 
-            Label {
+            TabButton {
                 text: "Expenses"
-                font.pixelSize: 18
-                font.weight: Font.DemiBold
-                Layout.fillWidth: true
-                opacity: 0.87
+                font.weight: Font.Medium
+                font.pixelSize: 14
+                Component.onCompleted: pointerCursor.createObject(this)
             }
+            TabButton {
+                text: "Members"
+                font.weight: Font.Medium
+                font.pixelSize: 14
+                Component.onCompleted: pointerCursor.createObject(this)
+            }
+            TabButton {
+                text: "Balances"
+                font.weight: Font.Medium
+                font.pixelSize: 14
+                Component.onCompleted: pointerCursor.createObject(this)
+            }
+        }
 
-            Rectangle {
-                width: 52
-                height: 24
-                radius: 12
-                color: Material.theme === Material.Dark ? Qt.rgba(
-                                                              255 / 255,
-                                                              255 / 255,
-                                                              255 / 255,
-                                                              0.1) : Material.color(
-                                                              Material.Grey,
-                                                              Material.Shade200)
+        // Tab Content
+        SwipeView {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            currentIndex: tabBar.currentIndex
 
-                Label {
-                    anchors.centerIn: parent
-                    text: expenseList.count + " items"
-                    opacity: 0.7
-                    font.pixelSize: 12
-                    font.weight: Font.Medium
+            onCurrentIndexChanged: tabBar.currentIndex = currentIndex
+
+            // ExpensesTab {
+            //     id: expensesTab
+            // }
+
+            // Expenses Tab
+            ColumnLayout {
+                spacing: 2
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 16
+                    Layout.topMargin: 12
+                    Layout.bottomMargin: 8
+                    spacing: 12
+
+                    Label {
+                        text: "Expenses"
+                        font.pixelSize: 16
+                        font.weight: Font.DemiBold
+                        Layout.fillWidth: true
+                        opacity: 0.87
+                    }
+
+                    Rectangle {
+                        width: 56
+                        height: 22
+                        radius: 11
+                        color: Material.theme
+                               === Material.Dark ? Qt.rgba(
+                                                       255 / 255, 255 / 255,
+                                                       255 / 255,
+                                                       0.1) : Material.color(
+                                                       Material.Grey,
+                                                       Material.Shade200)
+
+                        Label {
+                            anchors.centerIn: parent
+                            text: expenseList.count + " items"
+                            opacity: 0.7
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                        }
+                    }
+                }
+
+                ListView {
+                    id: expenseList
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.leftMargin: 16
+                    Layout.rightMargin: 16
+                    spacing: 10
+                    clip: true
+
+                    model: tripManager ? tripManager.expenseModel : null
+
+                    delegate: ExpenseCard {
+                        width: ListView.view.width
+                        expenseTitle: title
+                        expenseAmount: amount
+                        expenseIcon: "💵"
+                        paidBy: memberModel ? memberModel.nameOfId(
+                                                  paid_by) : "Member ID: " + paid_by
+                        tripCurrencySymbol: currencySymbol
+                        memberCount: root.memberCount
+                        onEditExpense: {
+                            editExpenseDialog.expenseId = id
+                            editExpenseDialog.expenseTitle = title
+                            editExpenseDialog.expenseAmount = amount
+                            editExpenseDialog.paidById = paid_by
+                            editExpenseDialog.splitType = split_type
+                            editExpenseDialog.excludedIds = excluded.slice()
+                            editExpenseDialog.open()
+                        }
+                        onDeleteExpense: {
+                            deleteExpenseDialog.expenseId = id
+                            deleteExpenseDialog.expenseTitle = title
+                            deleteExpenseDialog.open()
+                        }
+                    }
+                }
+
+                Button {
+                    text: "Add Expense"
+                    Layout.fillWidth: true
+                    Layout.margins: 16
+                    Layout.topMargin: 8
+                    Layout.preferredHeight: 48
+                    font.pixelSize: 14
+                    font.weight: Font.DemiBold
+                    Material.elevation: 3
+                    highlighted: true
+                    onClicked: addExpenseDialog.open()
+                    Component.onCompleted: pointerCursor.createObject(this)
                 }
             }
         }
-
-        ListView {
-            id: expenseList
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            spacing: 12
-            clip: true
-
-            // model: ListModel {}
-            model: tripManager ? tripManager.expenseModel : null
-
-            delegate: ExpenseCard {
-                width: ListView.view.width
-                expenseTitle: title
-                expenseAmount: amount
-                expenseIcon: "💵"
-                paidBy: paid_by
-                tripCurrencySymbol: currencySymbol
-                memberCount: root.memberCount
-                onClicked: console.log("TODO: View/Edit Expense")
-            }
-        }
-
-        Button {
-            text: "Add Expense"
-            Layout.fillWidth: true
-            Layout.preferredHeight: 52
-            font.pixelSize: 15
-            font.weight: Font.DemiBold
-            Material.elevation: 3
-            highlighted: true
-            onClicked: addExpenseDialog.open()
-            Component.onCompleted: pointerCursor.createObject(this)
-        }
     }
 
-    Component.onCompleted: tripManager.setCurrentTrip(tripId)
-
-    SettlementDialog {
-        id: settlementDialog
+    Component.onCompleted: {
+        tripManager.setCurrentTrip(tripId)
     }
 
-    AddExpenseDialog {
-        id: addExpenseDialog
-        onExpenseCreated: function (expenseTitle, expenseAmount, paidBy) {
-            tripManager.addExpense(expenseTitle, expenseAmount, paidBy)
+    EditTripDialog {
+        id: editTripDialog
+        tripId: root.tripId
+
+        onTripEdited: function (tripId, tripName, members, tripCurrency) {
+            tripManager.editTrip(tripId, tripName, members, tripCurrency)
         }
     }
 
@@ -307,12 +370,28 @@ Page {
         }
     }
 
-    EditTripDialog {
-        id: editTripDialog
-        tripId: root.tripId
+    AddExpenseDialog {
+        id: addExpenseDialog
+        memberModel: root.memberModel
+        onExpenseCreated: function (expenseTitle, expenseAmount, paidBy, split_type, excluded) {
+            tripManager.addExpense(expenseTitle, expenseAmount, paidBy,
+                                   split_type, excluded)
+        }
+    }
 
-        onTripEdited: function (tripId, tripName, members, tripCurrency) {
-            tripManager.editTrip(tripId, tripName, members, tripCurrency)
+    EditExpenseDialog {
+        id: editExpenseDialog
+        memberModel: root.memberModel
+        onExpenseEdited: function (expenseId, expenseTitle, expenseAmount, paidBy, split_type, excluded) {
+            tripManager.editExpense(expenseId, expenseTitle, expenseAmount,
+                                    paidBy, split_type, excluded)
+        }
+    }
+
+    DeleteExpenseDialog {
+        id: deleteExpenseDialog
+        onExpenseDeleted: function (expenseId) {
+            tripManager.deleteExpense(expenseId)
         }
     }
 

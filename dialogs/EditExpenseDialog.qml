@@ -6,16 +6,22 @@ import "../popups"
 
 Dialog {
     id: root
-    title: "Add Expense"
+    title: "Edit Expense"
     modal: true
     anchors.centerIn: parent
     width: parent.width * 0.88
     padding: 24
 
+    property string expenseId: ""
+    property string expenseTitle: ""
+    property real expenseAmount: 0
+    property string paidById: ""
+    property string splitType: "equal"
     property var excludedIds: []
+
     property var memberModel
 
-    signal expenseCreated(string expenseTitle, int expenseAmount, string paidById, string splitType, var excludedIds)
+    signal expenseEdited(string expenseId, string expenseTitle, real expenseAmount, string paidById, string splitType, var excludedIds)
 
     ColumnLayout {
         width: parent.width
@@ -50,7 +56,7 @@ Dialog {
             }
             ComboBox {
                 id: paidByField
-                implicitHeight: 45
+                implicitHeight: 50
 
                 model: memberModel
                 textRole: "name"
@@ -70,7 +76,7 @@ Dialog {
             }
             ComboBox {
                 id: splitTypeField
-                implicitHeight: 45
+                implicitHeight: 50
                 model: ["equal", "personal"]
             }
         }
@@ -96,26 +102,37 @@ Dialog {
             Component.onCompleted: pointerCursor.createObject(this)
         }
 
-        Button {
-            text: "Add Expense"
+        RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 48
-            font.weight: Font.DemiBold
-            highlighted: true
-            onClicked: {
-                if (titleField.text.trim() !== "" && amountField.text.trim(
-                            ) !== "") {
-                    root.expenseCreated(titleField.text,
-                                        parseFloat(amountField.text) || 0.00,
-                                        paidByField.currentValue,
-                                        splitTypeField.currentValue,
-                                        root.excludedIds)
-                    titleField.clear()
-                    amountField.clear()
-                    root.close()
-                }
+            spacing: 12
+
+            Button {
+                text: "Cancel"
+                Layout.fillWidth: true
+                Layout.preferredHeight: 48
+                flat: true
+                onClicked: root.close()
+                Component.onCompleted: pointerCursor.createObject(this)
             }
-            Component.onCompleted: pointerCursor.createObject(this)
+
+            Button {
+                text: "Save"
+                Layout.fillWidth: true
+                Layout.preferredHeight: 48
+                highlighted: true
+                onClicked: {
+                    if (titleField.text.trim() !== "" && amountField.text.trim(
+                                ) !== "") {
+                        root.expenseEdited(expenseId, titleField.text,
+                                           parseFloat(amountField.text)
+                                           || 0.00, paidByField.currentValue,
+                                           splitTypeField.currentValue,
+                                           root.excludedIds)
+                        root.close()
+                    }
+                }
+                Component.onCompleted: pointerCursor.createObject(this)
+            }
         }
     }
 
@@ -129,5 +146,13 @@ Dialog {
         onAccepted: function (ids) {
             root.excludedIds = ids
         }
+    }
+
+    onOpened: {
+        titleField.text = expenseTitle
+        amountField.text = expenseAmount
+        paidByField.currentIndex = memberModel.indexOfId(paidById)
+        splitTypeField.currentIndex = splitTypeField.model.indexOf(splitType)
+        excludedIds = excludedIds.slice()
     }
 }

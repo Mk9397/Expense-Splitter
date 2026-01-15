@@ -6,7 +6,7 @@ import QtQuick.Effects
 
 ItemDelegate {
     id: control
-    implicitHeight: 90
+    implicitHeight: 82
 
     property string expenseTitle: ""
     property int expenseAmount: 0
@@ -16,8 +16,15 @@ ItemDelegate {
     property string tripCurrencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
                                                               ) : ""
 
+    function formatAmount(amount) {
+        return Number(amount).toLocaleString(Qt.locale(), 'f', 2)
+    }
+
+    signal editExpense
+    signal deleteExpense
+
     background: Rectangle {
-        radius: 16
+        radius: 14
         color: {
             if (control.pressed)
                 return Material.color(
@@ -47,13 +54,13 @@ ItemDelegate {
     }
 
     contentItem: RowLayout {
-        anchors.margins: 18
-        spacing: 16
+        anchors.margins: 16
+        spacing: 14
 
         Rectangle {
-            width: 48
-            height: 48
-            radius: 24
+            width: 44
+            height: 44
+            radius: 22
             color: Material.theme === Material.Dark ? Qt.rgba(
                                                           255 / 255, 255 / 255,
                                                           255 / 255,
@@ -65,43 +72,60 @@ ItemDelegate {
             Label {
                 anchors.centerIn: parent
                 text: control.expenseIcon
-                font.pixelSize: 26
+                font.pixelSize: 24
             }
         }
 
         ColumnLayout {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
-            spacing: 5
+            spacing: 4
 
             Label {
                 text: control.expenseTitle
-                font.pixelSize: 16
+                font.pixelSize: 15
                 font.weight: Font.DemiBold
             }
             Label {
                 text: "Paid by " + control.paidBy
                 opacity: 0.55
-                font.pixelSize: 13
+                font.pixelSize: 12
             }
             Label {
-                text: tripCurrencySymbol + (expenseAmount / control.memberCount).toFixed(
-                          2) + " per person"
+                text: {
+                    let share = 0
+                    if (control.memberCount)
+                        share = expenseAmount / control.memberCount
+                    return tripCurrencySymbol + formatAmount(
+                                share) + " per person"
+                }
+
                 opacity: 0.7
-                font.pixelSize: 12
+                font.pixelSize: 11
                 color: Material.accent
                 font.weight: Font.Medium
             }
         }
 
         Label {
-            text: tripCurrencySymbol + control.expenseAmount.toFixed(2)
+            text: tripCurrencySymbol + formatAmount(control.expenseAmount)
             font.weight: Font.Bold
-            font.pixelSize: 19
+            font.pixelSize: 17
             color: Material.accent
             Layout.alignment: Qt.AlignVCenter
         }
+
+        ToolButton {
+            icon.source: "qrc:/icons/delete.svg"
+            icon.color: Material.color(Material.Red)
+            icon.width: 20
+            icon.height: 20
+            Layout.alignment: Qt.AlignVCenter
+            onClicked: control.deleteExpense()
+            Component.onCompleted: pointerCursor.createObject(this)
+        }
     }
 
+    onClicked: control.editExpense()
     Component.onCompleted: pointerCursor.createObject(this)
 }
