@@ -6,6 +6,7 @@ import json
 import uuid
 
 from .models import ExpenseModel, MemberModel, TripFilterProxy, TripModel
+from .utils.settlements import get_member_balances, get_settlement_transactions
 
 QML_IMPORT_NAME = "com.expensesplitter.backend"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -345,3 +346,33 @@ class TripManager(QObject):
     @Slot(result=str)
     def generateId(self):
         return str(uuid.uuid4())
+
+    @Property(dict, notify=expensesChanged)
+    def memberBalances(self):
+        """Returns a dictionary with balance info for each member"""
+        if not self._current_trip:
+            return {}
+
+        members = self._current_trip.get("members", [])
+        expenses = self._current_trip.get("expenses", [])
+        balances = get_member_balances(members, expenses)
+        return balances
+
+    @Slot(str, result="QVariantMap")
+    def getMemberBalance(self, member_id: str):
+        """Get balance info for a single member"""
+        all_balances = self.memberBalances
+        return all_balances.get(
+            member_id,
+            {"name": "Unknown", "total_paid": 0.0, "should_pay": 0.0, "balance": 0.0},
+        )
+
+    @Slot(result="QVariantList")
+    def getSettlementSuggestions(self):
+        """Returns list of suggested payments: who should pay whom how much"""
+        balances = self.memberBalances
+        if not balances:
+            return []
+
+        suggestions = get_settlement_transactions(balances)
+        return suggestions

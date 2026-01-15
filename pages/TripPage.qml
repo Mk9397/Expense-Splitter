@@ -403,7 +403,16 @@ Page {
 
                     delegate: MemberCard {
                         width: ListView.view.width
+
+                        property var memberBalance: tripManager.getMemberBalance(
+                                                        id)
                         memberName: name
+                        currencySymbol: root.currencySymbol
+
+                        totalPaid: memberBalance ? memberBalance.total_paid : 0
+                        shouldPay: memberBalance ? memberBalance.should_pay : 0
+                        balance: memberBalance ? memberBalance.balance : 0
+
                         onDeleteMember: {
                             deleteMemberDialog.memberId = id
                             deleteMemberDialog.memberName = name
@@ -426,11 +435,85 @@ Page {
                     Component.onCompleted: pointerCursor.createObject(this)
                 }
             }
+
+            // SettlementsTab {
+            //     id: settlementTab
+            // }
+
+            // Settlement Tab
+            ColumnLayout {
+                spacing: 2
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 16
+                    Layout.topMargin: 12
+                    Layout.bottomMargin: 8
+                    spacing: 12
+
+                    Label {
+                        text: "Balances"
+                        font.pixelSize: 16
+                        font.weight: Font.DemiBold
+                        Layout.fillWidth: true
+                        opacity: 0.87
+                    }
+
+                    Rectangle {
+                        width: 56
+                        height: 22
+                        radius: 11
+                        color: Material.theme
+                               === Material.Dark ? Qt.rgba(
+                                                       255 / 255, 255 / 255,
+                                                       255 / 255,
+                                                       0.1) : Material.color(
+                                                       Material.Grey,
+                                                       Material.Shade200)
+
+                        Label {
+                            anchors.centerIn: parent
+                            text: settlementList.count + " items"
+                            opacity: 0.7
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                        }
+                    }
+                }
+
+                ListView {
+                    id: settlementList
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.leftMargin: 16
+                    Layout.rightMargin: 16
+                    spacing: 10
+                    clip: true
+
+                    model: ListModel {
+                        id: settlementModel
+                    }
+
+                    delegate: SettlementCard {
+                        width: ListView.view.width
+                        debtor: model.from_name
+                        creditor: model.to_name
+                        amount: formatAmount(model.amount)
+                        currencySymbol: root.currencySymbol
+                    }
+                }
+            }
         }
     }
 
     Component.onCompleted: {
         tripManager.setCurrentTrip(tripId)
+
+        let suggestions = tripManager ? tripManager.getSettlementSuggestions(
+                                            ) : []
+        for (let suggestion of suggestions) {
+            settlementModel.append(suggestion)
+        }
     }
 
     EditTripDialog {
