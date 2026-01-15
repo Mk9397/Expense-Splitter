@@ -344,6 +344,88 @@ Page {
                     Component.onCompleted: pointerCursor.createObject(this)
                 }
             }
+
+            // MembersTab {
+            //     id: membersTab
+            // }
+
+            // Members Tab
+            ColumnLayout {
+                spacing: 0
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 16
+                    Layout.topMargin: 12
+                    Layout.bottomMargin: 8
+                    spacing: 12
+
+                    Label {
+                        text: "Members"
+                        font.pixelSize: 16
+                        font.weight: Font.DemiBold
+                        Layout.fillWidth: true
+                        opacity: 0.87
+                    }
+
+                    Rectangle {
+                        width: 68
+                        height: 22
+                        radius: 11
+                        color: Material.theme
+                               === Material.Dark ? Qt.rgba(
+                                                       255 / 255, 255 / 255,
+                                                       255 / 255,
+                                                       0.1) : Material.color(
+                                                       Material.Grey,
+                                                       Material.Shade200)
+
+                        Label {
+                            anchors.centerIn: parent
+                            text: memberList.count + " members"
+                            opacity: 0.7
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                        }
+                    }
+                }
+
+                ListView {
+                    id: memberList
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.leftMargin: 16
+                    Layout.rightMargin: 16
+                    spacing: 10
+                    clip: true
+
+                    model: root.memberModel
+
+                    delegate: MemberCard {
+                        width: ListView.view.width
+                        memberName: name
+                        onDeleteMember: {
+                            deleteMemberDialog.memberId = id
+                            deleteMemberDialog.memberName = name
+                            deleteMemberDialog.open()
+                        }
+                    }
+                }
+
+                Button {
+                    text: "Add Member"
+                    Layout.fillWidth: true
+                    Layout.margins: 16
+                    Layout.topMargin: 8
+                    Layout.preferredHeight: 48
+                    font.pixelSize: 14
+                    font.weight: Font.DemiBold
+                    Material.elevation: 3
+                    highlighted: true
+                    onClicked: addMemberDialog.open()
+                    Component.onCompleted: pointerCursor.createObject(this)
+                }
+            }
         }
     }
 
@@ -392,6 +474,20 @@ Page {
         id: deleteExpenseDialog
         onExpenseDeleted: function (expenseId) {
             tripManager.deleteExpense(expenseId)
+        }
+    }
+
+    AddMemberDialog {
+        id: addMemberDialog
+        onMemberCreated: function (memberName) {
+            tripManager.addMember(memberName)
+        }
+    }
+
+    DeleteMemberDialog {
+        id: deleteMemberDialog
+        onMemberDeleted: function (memberId) {
+            tripManager.deleteMember(memberId)
         }
     }
 

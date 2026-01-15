@@ -341,3 +341,7 @@ class TripManager(QObject):
                 self.membersChanged.emit()
                 return True
         return False
+
+    @Slot(result=str)
+    def generateId(self):
+        return str(uuid.uuid4())
