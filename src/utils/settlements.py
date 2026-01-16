@@ -1,3 +1,4 @@
+import heapq
 from typing import Dict, List
 
 
@@ -33,7 +34,7 @@ def get_member_balances(members: List[Dict], expenses: List[Dict]) -> Dict[str, 
                 )
 
         else:  # "equal" (default)
-            share = amount / participant_count
+            share = round(amount / participant_count, 2)
             for mid in participants:
                 if mid in balances:
                     balances[mid]["should_pay"] += share
@@ -46,57 +47,46 @@ def get_member_balances(members: List[Dict], expenses: List[Dict]) -> Dict[str, 
 
 def get_settlement_transactions(balances: Dict[str, Dict]) -> List[Dict]:
     """Generate settlement transactions to balance accounts"""
-    creditors = []
-    debtors = []
+    creditors = []  # max-heap → negative values
+    debtors = []  # max-heap → negative values for abs(debt)
     TOLERANCE = 0.01
 
     for mid, data in balances.items():
-        balance = data["balance"]
+        balance = round(data["balance"], 2)
         if balance > TOLERANCE:
-            creditors.append((mid, data["name"], balance))
+            heapq.heappush(
+                creditors, (-balance, data["name"], mid)
+            )  # negative = max heap
         elif balance < -TOLERANCE:
-            debtors.append((mid, data["name"], -balance))  # store as positive for ease
+            heapq.heappush(debtors, (balance, data["name"], mid))  # negative balance
 
     settlements = []
 
-    c_index = 0
-    d_index = 0
+    while creditors and debtors:
+        cred_amt_neg, cred_name, cred_id = heapq.heappop(creditors)
+        debt_amt, debt_name, debt_id = heapq.heappop(debtors)
 
-    creditors.sort(key=lambda x: x[2], reverse=True)  # biggest owed first
-    debtors.sort(key=lambda x: x[2], reverse=True)  # biggest owes first
-
-    while c_index < len(creditors) and d_index < len(debtors):
-        creditor_id, creditor_name, creditor_owed = creditors[c_index]
-        debtor_id, debtor_name, debtor_owes = debtors[d_index]
-
-        settlement_amount = min(creditor_owed, debtor_owes)
+        cred_amt = -cred_amt_neg
+        pay_amount = min(cred_amt, -debt_amt)
 
         settlements.append(
             {
-                "from_id": debtor_id,
-                "from_name": debtor_name,
-                "to_id": creditor_id,
-                "to_name": creditor_name,
-                "amount": settlement_amount,
+                "from_id": debt_id,
+                "from_name": debt_name,
+                "to_id": cred_id,
+                "to_name": cred_name,
+                "amount": round(pay_amount, 2),
             }
         )
 
         # Update amounts
-        creditors[c_index] = (
-            creditor_id,
-            creditor_name,
-            max(0, creditor_owed - settlement_amount),
-        )
-        debtors[d_index] = (
-            debtor_id,
-            debtor_name,
-            max(0, debtor_owes - settlement_amount),
-        )
+        cred_amt -= pay_amount
+        debt_amt += pay_amount  # debt_amt becomes less negative
 
         # Move to next creditor or debtor if settled
-        if creditors[c_index][2] < TOLERANCE:
-            c_index += 1
-        if debtors[d_index][2] < TOLERANCE:
-            d_index += 1
+        if cred_amt > 0.01:
+            heapq.heappush(creditors, (-cred_amt, cred_name, cred_id))
+        if debt_amt < -0.01:
+            heapq.heappush(debtors, (debt_amt, debt_name, debt_id))
 
     return settlements

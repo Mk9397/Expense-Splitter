@@ -5,6 +5,7 @@ import QtQuick.Controls.Material
 import QtQuick.Effects
 import "../components"
 import "../dialogs"
+import "../popups"
 
 Page {
     id: root
@@ -77,8 +78,21 @@ Page {
                 MenuItem {
                     text: "Share Trip"
                     icon.source: "qrc:/icons/share.svg"
-                    onTriggered: console.log(
-                                     "Yo, I've like been triggered and shi bruh")
+                    onTriggered: {
+                        let path = tripManager.shareTrip(root.tripId)
+                        if (!path)
+                            return
+                        shareToast.pdfPath = path
+
+                        let fileName = path.replace(/^.*[\\/]/, "")
+                        shareToast.fileName = fileName
+
+                        let pathParts = path.split(/[\\/]/)
+                        pathParts.pop()
+                        shareToast.displayPath = ".../" + pathParts.slice(
+                                    -3).join('/')
+                        shareToast.open()
+                    }
                     Component.onCompleted: pointerCursor.createObject(this)
                 }
 
@@ -192,7 +206,7 @@ Page {
                     spacing: 4
 
                     Label {
-                        text: "PER PERSON"
+                        text: "AVG SHARE"
                         font.pixelSize: 9
                         font.weight: Font.Bold
                         font.letterSpacing: 0.5
@@ -201,10 +215,10 @@ Page {
                     }
                     Label {
                         text: {
-                            let share = 0
+                            let avgShare = 0
                             if (root.memberCount)
-                                share = totalAmount / root.memberCount
-                            return currencySymbol + formatAmount(share)
+                                avgShare = tripManager.averageShouldPay
+                            return currencySymbol + formatAmount(avgShare)
                         }
                         font.pixelSize: 20
                         font.weight: Font.Bold
@@ -311,7 +325,9 @@ Page {
                         expenseIcon: "💵"
                         paidBy: memberModel ? memberModel.nameOfId(
                                                   paid_by) : "Member ID: " + paid_by
-                        tripCurrencySymbol: currencySymbol
+                        splitType: split_type
+                        excludedIds: excluded
+                        tripCurrencySymbol: root.currencySymbol
                         memberCount: root.memberCount
                         onEditExpense: {
                             editExpenseDialog.expenseId = id
@@ -514,6 +530,10 @@ Page {
         for (let suggestion of suggestions) {
             settlementModel.append(suggestion)
         }
+    }
+
+    ToastPopup {
+        id: shareToast
     }
 
     EditTripDialog {

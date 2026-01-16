@@ -12,8 +12,7 @@ ApplicationWindow {
     minimumWidth: 300
     minimumHeight: 500
 
-    maximumWidth: 500
-
+    // maximumWidth: 500
     title: "Expense Splitter"
 
     property int themeMode: Material.System

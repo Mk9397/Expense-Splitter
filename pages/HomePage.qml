@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 import "../components"
 import "../dialogs"
+import "../popups"
 
 Page {
     id: root
@@ -225,9 +226,19 @@ Page {
                     }
 
                     onShareTrip: {
-                        // TODO: Implement share functionality
-                        console.log("Share trip:", name)
-                        console.log("Trip ID:", id)
+                        let path = tripManager.shareTrip(id)
+                        if (!path)
+                            return
+                        shareToast.pdfPath = path
+
+                        let fileName = path.replace(/^.*[\\/]/, "")
+                        shareToast.fileName = fileName
+
+                        let pathParts = path.split(/[\\/]/)
+                        pathParts.pop()
+                        shareToast.displayPath = ".../" + pathParts.slice(
+                                    -3).join('/')
+                        shareToast.open()
                     }
                 }
             }
@@ -244,6 +255,10 @@ Page {
             onClicked: addTripDialog.open()
             Component.onCompleted: pointerCursor.createObject(this)
         }
+    }
+
+    ToastPopup {
+        id: shareToast
     }
 
     AddTripDialog {

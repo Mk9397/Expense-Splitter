@@ -12,6 +12,9 @@ ItemDelegate {
     property int expenseAmount: 0
     property string expenseIcon: ""
     property string paidBy: ""
+    property string splitType: "equal"
+    property var excludedIds: []
+
     property int memberCount: 1
     property string tripCurrencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
                                                               ) : ""
@@ -93,15 +96,16 @@ ItemDelegate {
             }
             Label {
                 text: {
-                    let share = 0
-                    if (control.memberCount)
-                        share = expenseAmount / control.memberCount
-                    return tripCurrencySymbol + formatAmount(
-                                share) + " per person"
+                    let participantCount = control.memberCount - excludedIds.length
+                    if (splitType === "personal") {
+                        return "Personal (only " + control.paidBy + ")"
+                    } else {
+                        return "Equal (" + participantCount + "/"
+                                + control.memberCount + " members)"
+                    }
                 }
-
                 opacity: 0.7
-                font.pixelSize: 11
+                font.pixelSize: 10
                 color: Material.accent
                 font.weight: Font.Medium
             }

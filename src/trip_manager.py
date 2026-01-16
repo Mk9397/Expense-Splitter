@@ -3,10 +3,12 @@ from PySide6.QtCore import Property, QObject, QSettings, QStandardPaths, Signal,
 from PySide6.QtQml import QmlElement
 from datetime import datetime
 import json
+from pathlib import Path
 import uuid
 
 from .models import ExpenseModel, MemberModel, TripFilterProxy, TripModel
 from .utils.settlements import get_member_balances, get_settlement_transactions
+from .utils.share import create_pdf
 
 QML_IMPORT_NAME = "com.expensesplitter.backend"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -43,11 +45,6 @@ class TripManager(QObject):
         trips_json = self.settings.value("trips", "[]")
         try:
             self._trips = json.loads(trips_json)
-            for trip in self._trips:
-                if "member_count" not in trip:
-                    trip["member_count"] = trip["members"]
-                    trip["members"] = []
-            self.save_trips()
         except json.JSONDecodeError:
             self._trips = []
 
@@ -175,13 +172,20 @@ class TripManager(QObject):
                 return True
         return False
 
-    @Slot(str, result="QVariantMap")
-    def getTrip(self, name):
-        """Get a specific trip by name"""
+    @Slot(str, result=str)
+    def shareTrip(self, trip_id: str):
+        """Share a trip's details"""
         for trip in self._trips:
-            if trip["name"] == name:
-                return trip
-        return {}
+            if trip["id"] == trip_id:
+                base = Path(QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation))
+                path = base / "ExpenseSplitter" / "Shared" / f"{trip['name']}.pdf"
+                path.parent.mkdir(parents=True, exist_ok=True)
+
+                balances = get_member_balances(trip.get("members", []), trip.get("expenses", []))
+                settlements = get_settlement_transactions(balances)
+                create_pdf(trip, balances, settlements, path)
+                return str(path)
+        return ""
 
     @Slot(str, result="QVariantMap")
     def getTripById(self, trip_id):
@@ -358,6 +362,15 @@ class TripManager(QObject):
         balances = get_member_balances(members, expenses)
         return balances
 
+    @Property(float, notify=expensesChanged)
+    def averageShouldPay(self):
+        """Get average 'should_pay' across members for the current trip"""
+        balances = self.memberBalances
+        if not balances:
+            return 0.0
+        total_should_pay = sum(data["should_pay"] for data in balances.values())
+        return total_should_pay / len(balances) if balances else 0.0
+
     @Slot(str, result="QVariantMap")
     def getMemberBalance(self, member_id: str):
         """Get balance info for a single member"""
@@ -376,3 +389,28 @@ class TripManager(QObject):
 
         suggestions = get_settlement_transactions(balances)
         return suggestions
+
+
+from PySide6.QtCore import Slot, QUrl
+from PySide6.QtGui import QDesktopServices
+import os
+import sys
+import subprocess
+
+class ShareHelper(QObject):
+
+    @Slot(str)
+    def showInFolder(self, path):
+        if sys.platform.startswith("win"):
+            subprocess.run(["explorer", "/select,", os.path.normpath(path)])
+        elif sys.platform == "darwin":
+            subprocess.run(["open", "-R", path])
+        else:
+            # Linux fallback
+            QDesktopServices.openUrl(
+                QUrl.fromLocalFile(os.path.dirname(path))
+            )
+    
+    @Slot(str)
+    def openFile(self, path):
+        QDesktopServices.openUrl(QUrl.fromLocalFile(path))
