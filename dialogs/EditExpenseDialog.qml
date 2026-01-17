@@ -19,9 +19,13 @@ Dialog {
     property string splitType: "equal"
     property var excludedIds: []
 
-    property var memberModel
+    property var participantModel
 
     signal expenseEdited(string expenseId, string expenseTitle, real expenseAmount, string paidById, string splitType, var excludedIds)
+
+    Overlay.modal: Rectangle {
+        color: Material.dropShadowColor
+    }
 
     ColumnLayout {
         width: parent.width
@@ -58,7 +62,7 @@ Dialog {
                 id: paidByField
                 implicitHeight: 50
 
-                model: memberModel
+                model: participantModel
                 textRole: "name"
                 valueRole: "id"
             }
@@ -83,7 +87,7 @@ Dialog {
 
         Button {
             id: excludeBtn
-            text: "Manage excluded members"
+            text: "Manage excluded participants"
                   + (excludedIds.length > 0 ? " (" + excludedIds.length + ")" : "")
             flat: true
             icon.source: "qrc:/icons/block.svg"
@@ -136,13 +140,13 @@ Dialog {
         }
     }
 
-    MemberMultiSelectPopup {
+    ParticipantMultiSelectPopup {
         id: excludePopup
         width: root.width * 0.85
-        height: memberModel ? Math.min(memberModel.rowCount() * 50 + 40,
-                                       300) : 200
+        height: participantModel ? Math.min(participantModel.rowCount(
+                                                ) * 50 + 40, 300) : 200
 
-        memberModel: root.memberModel
+        participantModel: root.participantModel
         onAccepted: function (ids) {
             root.excludedIds = ids
         }
@@ -151,7 +155,7 @@ Dialog {
     onOpened: {
         titleField.text = expenseTitle
         amountField.text = expenseAmount
-        paidByField.currentIndex = memberModel.indexOfId(paidById)
+        paidByField.currentIndex = participantModel.indexOfId(paidById)
         splitTypeField.currentIndex = splitTypeField.model.indexOf(splitType)
         excludedIds = excludedIds.slice()
     }

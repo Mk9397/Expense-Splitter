@@ -10,7 +10,7 @@ ItemDelegate {
 
     property string tripId: ""
     property string tripName: ""
-    property int memberCount: 0
+    property int participantCount: 0
 
     signal editTrip
     signal deleteTrip
@@ -100,7 +100,8 @@ ItemDelegate {
                 elide: Text.ElideRight
             }
             Label {
-                text: control.memberCount + " member" + (control.memberCount !== 1 ? "s" : "")
+                text: control.participantCount + " participant"
+                      + (control.participantCount !== 1 ? "s" : "")
                 opacity: 0.6
                 font.pixelSize: 14
             }
@@ -124,7 +125,6 @@ ItemDelegate {
                     icon.source: "qrc:/icons/edit.svg"
                     onTriggered: control.editTrip()
                 }
-
                 MenuItem {
                     text: "Share"
                     icon.source: "qrc:/icons/share.svg"
@@ -132,7 +132,6 @@ ItemDelegate {
                 }
 
                 MenuSeparator {}
-
                 MenuItem {
                     text: "Delete"
                     icon.source: "qrc:/icons/delete.svg"
@@ -160,6 +159,17 @@ ItemDelegate {
             sourceSize.height: 25
             opacity: 0.3
         }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        onClicked: {
+            // moreMenu.popup(moreButton.mapToItem(null, 0, moreButton.height))
+            moreMenu.popup()
+        }
+        hoverEnabled: true
+        cursorShape: "PointingHandCursor"
     }
 
     Component.onCompleted: pointerCursor.createObject(this)

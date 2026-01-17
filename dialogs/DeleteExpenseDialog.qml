@@ -16,6 +16,10 @@ Dialog {
 
     signal expenseDeleted(string expenseId)
 
+    Overlay.modal: Rectangle {
+        color: Material.dropShadowColor
+    }
+
     ColumnLayout {
         width: parent.width
         spacing: 16

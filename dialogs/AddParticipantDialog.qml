@@ -5,13 +5,17 @@ import QtQuick.Controls.Material
 
 Dialog {
     id: root
-    title: "Add New Member"
+    title: "Add New Participant"
     modal: true
     anchors.centerIn: parent
-    width: parent.width * 0.88
+    width: parent.width * 0.8
     padding: 24
 
-    signal memberCreated(string memberName)
+    signal participantCreated(string participantName)
+
+    Overlay.modal: Rectangle {
+        color: Material.dropShadowColor
+    }
 
     ColumnLayout {
         width: parent.width
@@ -38,7 +42,7 @@ Dialog {
             }
 
             Button {
-                text: "Add Member"
+                text: "Add Participant"
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 font.weight: Font.DemiBold
@@ -46,7 +50,7 @@ Dialog {
                 highlighted: true
                 onClicked: {
                     if (nameField.text.trim() !== "") {
-                        root.memberCreated(nameField.text)
+                        root.participantCreated(nameField.text)
                         nameField.clear()
                         root.close()
                     }

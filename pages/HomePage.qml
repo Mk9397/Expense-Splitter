@@ -202,7 +202,7 @@ Page {
                     width: ListView.view.width
                     tripId: id
                     tripName: name
-                    memberCount: member_count
+                    participantCount: participant_count
 
                     onClicked: {
                         var stack = root.StackView.view
@@ -214,7 +214,7 @@ Page {
                     onEditTrip: {
                         editTripDialog.tripId = id
                         editTripDialog.tripName = name
-                        editTripDialog.members = members
+                        editTripDialog.participants = participants
                         editTripDialog.tripCurrency = currency
                         editTripDialog.open()
                     }
@@ -277,8 +277,8 @@ Page {
 
     EditTripDialog {
         id: editTripDialog
-        onTripEdited: function (tripId, tripName, members, tripCurrency) {
-            tripManager.editTrip(tripId, tripName, members, tripCurrency)
+        onTripEdited: function (tripId, tripName, participants, tripCurrency) {
+            tripManager.editTrip(tripId, tripName, participants, tripCurrency)
         }
     }
 

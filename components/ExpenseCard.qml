@@ -15,7 +15,7 @@ ItemDelegate {
     property string splitType: "equal"
     property var excludedIds: []
 
-    property int memberCount: 1
+    property int participantCount: 1
     property string tripCurrencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
                                                               ) : ""
 
@@ -96,12 +96,12 @@ ItemDelegate {
             }
             Label {
                 text: {
-                    let participantCount = control.memberCount - excludedIds.length
+                    let participantCount = control.participantCount - excludedIds.length
                     if (splitType === "personal") {
                         return "Personal (only " + control.paidBy + ")"
                     } else {
                         return "Equal (" + participantCount + "/"
-                                + control.memberCount + " members)"
+                                + control.participantCount + " participants)"
                     }
                 }
                 opacity: 0.7

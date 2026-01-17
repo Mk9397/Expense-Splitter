@@ -11,14 +11,17 @@ Popup {
     anchors.centerIn: parent
 
     property var selectedIds: []
-    property var memberModel
+    property var participantModel
 
     signal accepted(var selectedIds)
 
     background: Rectangle {
         radius: 12
-        color: Material.background
-        border.color: Material.dividerColor
+        color: Material.dialogColor
+    }
+
+    Overlay.modal: Rectangle {
+        color: Material.dropShadowColor
     }
 
     ColumnLayout {
@@ -26,7 +29,7 @@ Popup {
         spacing: 8
 
         Label {
-            text: "Exclude members"
+            text: "Exclude participants"
             font.pixelSize: 14
             font.weight: Font.Medium
         }
@@ -35,7 +38,7 @@ Popup {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            model: control.memberModel ?? null
+            model: control.participantModel ?? null
 
             delegate: CheckDelegate {
                 width: parent.width

@@ -8,10 +8,14 @@ Dialog {
     title: "Create New Group"
     modal: true
     anchors.centerIn: parent
-    width: parent.width * 0.88
+    width: parent.width * 0.8
     padding: 24
 
     signal tripCreated(string tripName)
+
+    Overlay.modal: Rectangle {
+        color: Material.dropShadowColor
+    }
 
     ColumnLayout {
         width: parent.width

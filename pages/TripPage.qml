@@ -10,15 +10,15 @@ import "../popups"
 Page {
     id: root
     property string tripId: ""
-    property string tripName: tripManager ? tripManager.currentTrip.name : ""
-    property string tripCurrency: tripManager ? tripManager.currentTrip.currency : ""
-    property int memberCount: tripManager ? tripManager.memberCount : 0
+    property string tripName: tripManager ? tripManager.activeTrip.name : ""
+    property string tripCurrency: tripManager ? tripManager.activeTrip.currency : ""
+    property int participantCount: tripManager ? tripManager.participantCount : 0
 
     property string currencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
                                                           tripCurrency) : ""
 
-    property real totalAmount: tripManager ? tripManager.totalTripAmount : 0
-    property var memberModel: tripManager ? tripManager.memberModel : null
+    property real totalAmount: tripManager ? tripManager.totalSpent : 0
+    property var participantModel: tripManager ? tripManager.participantModel : null
 
     function formatAmount(amount) {
         return Number(amount).toLocaleString(Qt.locale(), 'f', 2)
@@ -69,7 +69,7 @@ Page {
                     icon.source: "qrc:/icons/edit.svg"
                     onTriggered: {
                         editTripDialog.tripName = root.tripName
-                        editTripDialog.members = tripManager.membersList
+                        editTripDialog.participants = tripManager.participantsList
                         editTripDialog.tripCurrency = root.tripCurrency
                         editTripDialog.open()
                     }
@@ -148,7 +148,7 @@ Page {
                     spacing: 4
 
                     Label {
-                        text: "MEMBERS"
+                        text: "PARTICIPANTS"
                         font.pixelSize: 9
                         font.weight: Font.Bold
                         font.letterSpacing: 0.5
@@ -156,7 +156,7 @@ Page {
                         color: Material.accent
                     }
                     Label {
-                        text: root.memberCount.toString()
+                        text: root.participantCount.toString()
                         font.pixelSize: 20
                         font.weight: Font.Bold
                         color: Material.accent
@@ -216,8 +216,8 @@ Page {
                     Label {
                         text: {
                             let avgShare = 0
-                            if (root.memberCount)
-                                avgShare = tripManager.averageShouldPay
+                            if (root.participantCount)
+                                avgShare = tripManager.averageSharePerPerson
                             return currencySymbol + formatAmount(avgShare)
                         }
                         font.pixelSize: 20
@@ -241,7 +241,7 @@ Page {
                 Component.onCompleted: pointerCursor.createObject(this)
             }
             TabButton {
-                text: "Members"
+                text: "Participants"
                 font.weight: Font.Medium
                 font.pixelSize: 14
                 Component.onCompleted: pointerCursor.createObject(this)
@@ -323,12 +323,12 @@ Page {
                         expenseTitle: title
                         expenseAmount: amount
                         expenseIcon: "💵"
-                        paidBy: memberModel ? memberModel.nameOfId(
-                                                  paid_by) : "Member ID: " + paid_by
+                        paidBy: participantModel ? participantModel.nameOfId(
+                                                       paid_by) : "Participant ID: " + paid_by
                         splitType: split_type
                         excludedIds: excluded
                         tripCurrencySymbol: root.currencySymbol
-                        memberCount: root.memberCount
+                        participantCount: root.participantCount
                         onEditExpense: {
                             editExpenseDialog.expenseId = id
                             editExpenseDialog.expenseTitle = title
@@ -361,11 +361,11 @@ Page {
                 }
             }
 
-            // MembersTab {
-            //     id: membersTab
+            // ParticipantsTab {
+            //     id: participantsTab
             // }
 
-            // Members Tab
+            // Participants Tab
             ColumnLayout {
                 spacing: 0
 
@@ -377,7 +377,7 @@ Page {
                     spacing: 12
 
                     Label {
-                        text: "Members"
+                        text: "Participants"
                         font.pixelSize: 16
                         font.weight: Font.DemiBold
                         Layout.fillWidth: true
@@ -385,7 +385,7 @@ Page {
                     }
 
                     Rectangle {
-                        width: 68
+                        width: 84
                         height: 22
                         radius: 11
                         color: Material.theme
@@ -398,7 +398,7 @@ Page {
 
                         Label {
                             anchors.centerIn: parent
-                            text: memberList.count + " members"
+                            text: participantList.count + " participants"
                             opacity: 0.7
                             font.pixelSize: 11
                             font.weight: Font.Medium
@@ -407,7 +407,7 @@ Page {
                 }
 
                 ListView {
-                    id: memberList
+                    id: participantList
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.leftMargin: 16
@@ -415,30 +415,30 @@ Page {
                     spacing: 10
                     clip: true
 
-                    model: root.memberModel
+                    model: root.participantModel
 
-                    delegate: MemberCard {
+                    delegate: ParticipantCard {
                         width: ListView.view.width
 
-                        property var memberBalance: tripManager.getMemberBalance(
-                                                        id)
-                        memberName: name
+                        property var participantBalance: tripManager.getParticipantBalance(
+                                                             id)
+                        participantName: name
                         currencySymbol: root.currencySymbol
 
-                        totalPaid: memberBalance ? memberBalance.total_paid : 0
-                        shouldPay: memberBalance ? memberBalance.should_pay : 0
-                        balance: memberBalance ? memberBalance.balance : 0
+                        totalPaid: participantBalance ? participantBalance.total_paid : 0
+                        shouldPay: participantBalance ? participantBalance.should_pay : 0
+                        balance: participantBalance ? participantBalance.balance : 0
 
-                        onDeleteMember: {
-                            deleteMemberDialog.memberId = id
-                            deleteMemberDialog.memberName = name
-                            deleteMemberDialog.open()
+                        onDeleteParticipant: {
+                            deleteParticipantDialog.participantId = id
+                            deleteParticipantDialog.participantName = name
+                            deleteParticipantDialog.open()
                         }
                     }
                 }
 
                 Button {
-                    text: "Add Member"
+                    text: "Add Participant"
                     Layout.fillWidth: true
                     Layout.margins: 16
                     Layout.topMargin: 8
@@ -447,7 +447,7 @@ Page {
                     font.weight: Font.DemiBold
                     Material.elevation: 3
                     highlighted: true
-                    onClicked: addMemberDialog.open()
+                    onClicked: addParticipantDialog.open()
                     Component.onCompleted: pointerCursor.createObject(this)
                 }
             }
@@ -523,9 +523,9 @@ Page {
     }
 
     Component.onCompleted: {
-        tripManager.setCurrentTrip(tripId)
+        tripManager.setActiveTrip(tripId)
 
-        let suggestions = tripManager ? tripManager.getSettlementSuggestions(
+        let suggestions = tripManager ? tripManager.getSuggestedSettlements(
                                             ) : []
         for (let suggestion of suggestions) {
             settlementModel.append(suggestion)
@@ -540,8 +540,8 @@ Page {
         id: editTripDialog
         tripId: root.tripId
 
-        onTripEdited: function (tripId, tripName, members, tripCurrency) {
-            tripManager.editTrip(tripId, tripName, members, tripCurrency)
+        onTripEdited: function (tripId, tripName, participants, tripCurrency) {
+            tripManager.editTrip(tripId, tripName, participants, tripCurrency)
         }
     }
 
@@ -557,7 +557,7 @@ Page {
 
     AddExpenseDialog {
         id: addExpenseDialog
-        memberModel: root.memberModel
+        participantModel: root.participantModel
         onExpenseCreated: function (expenseTitle, expenseAmount, paidBy, split_type, excluded) {
             tripManager.addExpense(expenseTitle, expenseAmount, paidBy,
                                    split_type, excluded)
@@ -566,7 +566,7 @@ Page {
 
     EditExpenseDialog {
         id: editExpenseDialog
-        memberModel: root.memberModel
+        participantModel: root.participantModel
         onExpenseEdited: function (expenseId, expenseTitle, expenseAmount, paidBy, split_type, excluded) {
             tripManager.editExpense(expenseId, expenseTitle, expenseAmount,
                                     paidBy, split_type, excluded)
@@ -580,17 +580,17 @@ Page {
         }
     }
 
-    AddMemberDialog {
-        id: addMemberDialog
-        onMemberCreated: function (memberName) {
-            tripManager.addMember(memberName)
+    AddParticipantDialog {
+        id: addParticipantDialog
+        onParticipantCreated: function (participantName) {
+            tripManager.addParticipant(participantName)
         }
     }
 
-    DeleteMemberDialog {
-        id: deleteMemberDialog
-        onMemberDeleted: function (memberId) {
-            tripManager.deleteMember(memberId)
+    DeleteParticipantDialog {
+        id: deleteParticipantDialog
+        onParticipantDeleted: function (participantId) {
+            tripManager.deleteParticipant(participantId)
         }
     }
 

@@ -105,13 +105,13 @@ def create_pdf(trip, balances, settlements, path):
     # ── Header ───────────────────────────────────────────────
     story.append(Paragraph(trip["name"], title_style))
     created_date = datetime.fromisoformat(trip["created_at"]).strftime("%B %d, %Y")
-    meta = f"Created {created_date}  •  {len(trip['members'])} participants  •  {trip['currency']}"
+    meta = f"Created {created_date}  •  {len(trip['participants'])} participants  •  {trip['currency']}"
     story.append(Paragraph(meta, subtitle_style))
     story.append(Spacer(1, 1.2 * cm))
 
     # ── Summary ──────────────────────────────────────────────
     total_expenses = sum(e["amount"] for e in trip["expenses"])
-    avg_per_person = total_expenses / len(trip["members"]) if trip["members"] else 0
+    avg_per_person = total_expenses / len(trip["participants"]) if trip["participants"] else 0
     expense_count = len(trip["expenses"])
 
     summary_data = [
@@ -164,7 +164,7 @@ def create_pdf(trip, balances, settlements, path):
 
     for e in sorted_expenses:
         payer_name = next(
-            (m["name"] for m in trip["members"] if m["id"] == e["paid_by"]), "Unknown"
+            (m["name"] for m in trip["participants"] if m["id"] == e["paid_by"]), "Unknown"
         )
         expense_date = datetime.fromisoformat(e["created_at"]).strftime("%b %d")
 
@@ -211,14 +211,14 @@ def create_pdf(trip, balances, settlements, path):
     story.append(Spacer(1, 1.2 * cm))
 
     # ── Balances ─────────────────────────────────────────────
-    story.append(Paragraph("Member Balances", section_style))
+    story.append(Paragraph("Participant Balances", section_style))
     story.append(
         HRFlowable(
             width="100%", thickness=1.2, color=ACCENT, spaceBefore=6, spaceAfter=8
         )
     )
 
-    balance_data = [["Member", "Paid", "Should Pay", "Balance"]]
+    balance_data = [["Participant", "Paid", "Should Pay", "Balance"]]
 
     sorted_balances = sorted(
         balances.items(), key=lambda x: x[1]["balance"], reverse=True

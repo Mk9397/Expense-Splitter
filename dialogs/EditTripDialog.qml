@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
-import QtQuick.Effects
 import "../components"
 
 Dialog {
@@ -15,10 +14,14 @@ Dialog {
 
     property string tripId: ""
     property string tripName: ""
-    property var members: []
+    property var participants: []
     property string tripCurrency: ""
 
-    signal tripEdited(string tripId, string tripName, var members, string tripCurrency)
+    signal tripEdited(string tripId, string tripName, var participants, string tripCurrency)
+
+    Overlay.modal: Rectangle {
+        color: Material.dropShadowColor
+    }
 
     ColumnLayout {
         width: parent.width
@@ -39,28 +42,13 @@ Dialog {
         }
 
         Button {
-            text: "Manage Members (%1)".arg(memberModel.count)
+            text: "Manage Participants (%1)".arg(participantModel.count)
             Layout.fillWidth: true
             flat: true
             icon.source: "qrc:/icons/group.svg"
             font.weight: Font.Medium
-            onClicked: membersPopup.open()
+            onClicked: participantsPopup.open()
             Component.onCompleted: pointerCursor.createObject(this)
-
-            // background: Rectangle {
-            //     radius: 10
-            //     color: parent.pressed ? Material.color(
-            //                                 Material.Grey,
-            //                                 Material.Shade300) : parent.hovered ? Material.color(Material.Grey, Material.Shade200) : Material.color(Material.Grey, Material.Shade100)
-            //     border.color: Material.color(Material.Grey, Material.Shade300)
-            //     border.width: 1
-
-            //     Behavior on color {
-            //         ColorAnimation {
-            //             duration: 150
-            //         }
-            //     }
-            // }
         }
 
         RowLayout {
@@ -82,17 +70,19 @@ Dialog {
                 Layout.preferredHeight: 48
                 highlighted: true
                 onClicked: {
-                    let newMembers = []
-                    for (var i = 0; i < memberModel.count; ++i) {
-                        newMembers.push({
-                                            "id": memberModel.get(i).id,
-                                            "name": memberModel.get(i).name
-                                        })
+                    let newParticipants = []
+                    for (var i = 0; i < participantModel.count; ++i) {
+                        newParticipants.push({
+                                                 "id": participantModel.get(
+                                                           i).id,
+                                                 "name": participantModel.get(
+                                                             i).name
+                                             })
                     }
 
                     root.tripEdited(
                                 root.tripId, editTripNameField.text,
-                                newMembers,
+                                newParticipants,
                                 editCurrencyCombo.model[editCurrencyCombo.currentIndex].code)
                     root.close()
                 }
@@ -102,50 +92,43 @@ Dialog {
     }
 
     ListModel {
-        id: memberModel
+        id: participantModel
     }
 
     Popup {
-        id: membersPopup
+        id: participantsPopup
         parent: Overlay.overlay
         anchors.centerIn: parent
-        width: parent.width * 0.88
+        width: parent.width * 0.8
         height: Math.min(parent.height * 0.7, 500)
         modal: true
 
         background: Rectangle {
-            // color: ApplicationWindow.window ? ApplicationWindow.window.background : Material.Blue
-            color: Material.background
+            color: Material.dialogColor
             radius: 16
+        }
 
-            layer.enabled: true
-            layer.effect: MultiEffect {
-                shadowEnabled: true
-                shadowColor: Qt.rgba(0, 0, 0, 0.08)
-                shadowBlur: 0.3
-                shadowVerticalOffset: 4
-                shadowHorizontalOffset: 0
-            }
+        Overlay.modal: Rectangle {
+            color: Material.dropShadowColor
         }
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 24
-            spacing: 16
+            anchors.margins: 16
+            spacing: 12
 
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 12
 
                 Label {
-                    text: "Members"
+                    text: "Participants"
                     font.pixelSize: 18
                     font.weight: Font.Bold
                     Layout.fillWidth: true
                 }
-
                 Label {
-                    text: memberModel.count
+                    text: participantModel.count
                     font.pixelSize: 14
                     font.weight: Font.Medium
                     color: Material.color(Material.Grey)
@@ -155,20 +138,22 @@ Dialog {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                // color: Material.color(Material.Grey, Material.Shade200)
+                color: Material.foreground
             }
 
             ListView {
-                id: memberList
+                id: participantList
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                model: memberModel
+                model: participantModel
                 clip: true
-                spacing: 10
+                spacing: 8
+                focus: true
                 boundsMovement: Flickable.StopAtBounds
 
                 ScrollBar.vertical: ScrollBar {
                     policy: ScrollBar.AsNeeded
+                    width: 10
                 }
 
                 add: Transition {
@@ -206,55 +191,14 @@ Dialog {
                     }
                 }
 
-                delegate: SwipeDelegate {
-                    id: swipeDelegate
-                    width: memberList.width
-                    height: 64
-
-                    swipe.right: Rectangle {
-                        width: 80
-                        height: parent.height
-                        anchors.right: parent.right
-                        color: Material.color(Material.Red)
-                        radius: 10
-
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: 6
-
-                            Image {
-                                source: "qrc:/icons/delete.svg"
-                                Layout.alignment: Qt.AlignHCenter
-                                Layout.preferredWidth: 28
-                                Layout.preferredHeight: 28
-                                sourceSize.width: 28
-                                sourceSize.height: 28
-                            }
-                            Label {
-                                text: "Delete"
-                                color: "white"
-                                font.pixelSize: 12
-                                font.weight: Font.Medium
-                                Layout.alignment: Qt.AlignHCenter
-                            }
-                        }
-                    }
-
-                    swipe.onCompleted: {
-                        // if (swipe.position > 0.45)
-                        memberModel.remove(index)
-                    }
+                delegate: ItemDelegate {
+                    width: participantList.width
 
                     background: Rectangle {
                         radius: 12
-                        color: swipeDelegate.pressed ? Qt.darker(
-                                                           ApplicationWindow.window.cardBackground,
-                                                           1.05) : ApplicationWindow.window.cardBackground
-                        border.color: swipeDelegate.swipe.position
-                                      > 0 ? Material.color(
-                                                Material.Red,
-                                                Material.Shade200) : "transparent"
-                        border.width: swipeDelegate.swipe.position > 0 ? 1 : 0
+                        color: ApplicationWindow.window.cardBackground
+                        border.color: ApplicationWindow.window.cardBorder
+                        border.width: 1
 
                         Behavior on color {
                             ColorAnimation {
@@ -264,17 +208,11 @@ Dialog {
                     }
 
                     contentItem: RowLayout {
-                        width: parent.width
-                        height: parent.height
                         spacing: 12
-
-                        Item {
-                            width: 14
-                        }
 
                         Label {
                             text: name
-                            font.pixelSize: 15
+                            font.pixelSize: 12
                             font.weight: Font.Medium
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignVCenter
@@ -282,91 +220,60 @@ Dialog {
                         ToolButton {
                             icon.source: "qrc:/icons/delete.svg"
                             icon.color: Material.color(Material.Red)
-                            icon.width: 20
-                            icon.height: 20
-                            onClicked: memberModel.remove(index)
+                            icon.width: 24
+                            icon.height: 24
+                            onClicked: participantModel.remove(index)
                             Component.onCompleted: pointerCursor.createObject(
                                                        this)
                         }
-
-                        Item {
-                            width: 14
-                        }
                     }
                 }
             }
 
-            Button {
-                text: "Add Member"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 48
-                flat: true
-                icon.source: "qrc:/icons/add.svg"
-                font.weight: Font.Medium
-                onClicked: {
-                    membersPopup.close()
-                    memberDialog.open()
-                }
-                Component.onCompleted: pointerCursor.createObject(this)
+            RowLayout {
+                spacing: 4
 
-                background: Rectangle {
-                    radius: 12
-                    color: parent.pressed ? Material.color(
-                                                Material.Grey,
-                                                Material.Shade300) : parent.hovered ? Material.color(Material.Grey, Material.Shade200) : "transparent"
-                    border.color: Material.color(Material.Grey,
-                                                 Material.Shade400)
-                    border.width: 1
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 150
-                        }
+                Button {
+                    text: "Add Participant"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 48
+                    flat: true
+                    highlighted: true
+                    icon.source: "qrc:/icons/add.svg"
+                    font.weight: Font.Medium
+                    onClicked: {
+                        participantsPopup.close()
+                        participantDialog.open()
                     }
+                    Component.onCompleted: pointerCursor.createObject(this)
                 }
-            }
-
-            Button {
-                text: "Done"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 52
-                highlighted: true
-                font.weight: Font.Medium
-                font.pixelSize: 15
-                onClicked: membersPopup.close()
-                Component.onCompleted: pointerCursor.createObject(this)
-
-                background: Rectangle {
-                    radius: 12
-                    color: parent.pressed ? Qt.darker(
-                                                Material.accentColor,
-                                                1.1) : parent.hovered ? Qt.lighter(
-                                                                            Material.accentColor,
-                                                                            1.05) : Material.accentColor
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 150
-                        }
-                    }
+                Button {
+                    text: "Done"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 48
+                    highlighted: true
+                    font.weight: Font.Medium
+                    font.pixelSize: 12
+                    onClicked: participantsPopup.close()
+                    Component.onCompleted: pointerCursor.createObject(this)
                 }
             }
         }
     }
 
     onOpened: {
-        memberModel.clear()
-        for (let m of root.members)
-            memberModel.append(m)
+        participantModel.clear()
+        for (let p of root.participants)
+            participantModel.append(p)
     }
 
-    AddMemberDialog {
-        id: memberDialog
-        onMemberCreated: function (memberName) {
-            memberModel.append({
-                                   "id": tripManager.generateId(),
-                                   "name": memberName.trim()
-                               })
+    AddParticipantDialog {
+        id: participantDialog
+        onParticipantCreated: function (participantName) {
+            participantModel.append({
+                                        "id": tripManager.generateId(),
+                                        "name": participantName.trim()
+                                    })
         }
     }
 }

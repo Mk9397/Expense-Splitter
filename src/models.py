@@ -10,8 +10,8 @@ from PySide6.QtCore import (
 class TripModel(QAbstractListModel):
     IdRole = Qt.UserRole + 1
     NameRole = Qt.UserRole + 2
-    MemberCountRole = Qt.UserRole + 3
-    MembersRole = Qt.UserRole + 4
+    ParticipantCountRole = Qt.UserRole + 3
+    ParticipantsRole = Qt.UserRole + 4
     CurrencyRole = Qt.UserRole + 5
 
     def __init__(self, trips_list, parent=None):
@@ -30,10 +30,10 @@ class TripModel(QAbstractListModel):
             return trip["id"]
         if role == self.NameRole:
             return trip["name"]
-        if role == self.MemberCountRole:
-            return len(trip.get("members", []))
-        if role == self.MembersRole:
-            return trip.get("members", [])
+        if role == self.ParticipantCountRole:
+            return len(trip.get("participants", []))
+        if role == self.ParticipantsRole:
+            return trip.get("participants", [])
         if role == self.CurrencyRole:
             return trip["currency"]
         return None
@@ -42,8 +42,8 @@ class TripModel(QAbstractListModel):
         return {
             self.IdRole: b"id",
             self.NameRole: b"name",
-            self.MemberCountRole: b"member_count",
-            self.MembersRole: b"members",
+            self.ParticipantCountRole: b"participant_count",
+            self.ParticipantsRole: b"participants",
             self.CurrencyRole: b"currency",
         }
 
@@ -114,32 +114,32 @@ class ExpenseModel(QAbstractListModel):
         }
 
 
-class MemberModel(QAbstractListModel):
+class ParticipantModel(QAbstractListModel):
     IdRole = Qt.UserRole + 1
     NameRole = Qt.UserRole + 2
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._members = []
+        self._participants = []
 
-    def setMembers(self, members):
-        """Update the member list"""
+    def setParticipants(self, participants):
+        """Update the participant list"""
         self.beginResetModel()
-        self._members = members
+        self._participants = participants
         self.endResetModel()
 
     def rowCount(self, parent=QModelIndex()):
-        return len(self._members)
+        return len(self._participants)
 
     def data(self, index, role=Qt.DisplayRole):
-        if not index.isValid() or not (0 <= index.row() < len(self._members)):
+        if not index.isValid() or not (0 <= index.row() < len(self._participants)):
             return None
 
-        member = self._members[index.row()]
+        participant = self._participants[index.row()]
         if role == self.IdRole:
-            return member["id"]
+            return participant["id"]
         if role == self.NameRole:
-            return member["name"]
+            return participant["name"]
         return None
 
     def roleNames(self):
@@ -151,24 +151,24 @@ class MemberModel(QAbstractListModel):
     @Slot(int, result=dict)
     def get(self, row):
         """Returns dict with all roles for given row"""
-        if not (0 <= row < len(self._members)):
+        if not (0 <= row < len(self._participants)):
             return {}
 
-        member = self._members[row]
-        return {"id": member["id"], "name": member["name"]}
+        participant = self._participants[row]
+        return {"id": participant["id"], "name": participant["name"]}
 
     @Slot(str, result=int)
-    def indexOfId(self, member_id: str):
-        """Returns the index of the member with the given ID, or -1 if not found"""
-        for row, member in enumerate(self._members):
-            if member["id"] == member_id:
+    def indexOfId(self, participant_id: str):
+        """Returns the index of the participant with the given ID, or -1 if not found"""
+        for row, participant in enumerate(self._participants):
+            if participant["id"] == participant_id:
                 return row
         return -1
 
     @Slot(str, result=str)
-    def nameOfId(self, member_id: str):
-        """Returns the name of the member with the given ID, or empty string if not found"""
-        for member in self._members:
-            if member["id"] == member_id:
-                return member["name"]
+    def nameOfId(self, participant_id: str):
+        """Returns the name of the participant with the given ID, or empty string if not found"""
+        for participant in self._participants:
+            if participant["id"] == participant_id:
+                return participant["name"]
         return ""

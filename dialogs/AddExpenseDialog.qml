@@ -13,9 +13,13 @@ Dialog {
     padding: 24
 
     property var excludedIds: []
-    property var memberModel
+    property var participantModel
 
     signal expenseCreated(string expenseTitle, int expenseAmount, string paidById, string splitType, var excludedIds)
+
+    Overlay.modal: Rectangle {
+        color: Material.dropShadowColor
+    }
 
     ColumnLayout {
         width: parent.width
@@ -52,7 +56,7 @@ Dialog {
                 id: paidByField
                 implicitHeight: 45
 
-                model: memberModel
+                model: participantModel
                 textRole: "name"
                 valueRole: "id"
             }
@@ -77,7 +81,7 @@ Dialog {
 
         Button {
             id: excludeBtn
-            text: "Manage excluded members"
+            text: "Manage excluded participants"
                   + (excludedIds.length > 0 ? " (" + excludedIds.length + ")" : "")
             flat: true
             icon.source: "qrc:/icons/block.svg"
@@ -119,13 +123,13 @@ Dialog {
         }
     }
 
-    MemberMultiSelectPopup {
+    ParticipantMultiSelectPopup {
         id: excludePopup
         width: root.width * 0.85
-        height: memberModel ? Math.min(memberModel.rowCount() * 50 + 40,
-                                       300) : 200
+        height: participantModel ? Math.min(participantModel.rowCount(
+                                                ) * 50 + 40, 300) : 200
 
-        memberModel: root.memberModel
+        participantModel: root.participantModel
         onAccepted: function (ids) {
             root.excludedIds = ids
         }

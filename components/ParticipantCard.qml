@@ -8,13 +8,13 @@ ItemDelegate {
     id: control
     implicitHeight: 88
 
-    property string memberName: "Member" + (index + 1)
+    property string participantName: "Participant" + (index + 1)
     property string currencySymbol: "₦"
     property real totalPaid: 0
     property real shouldPay: 0
     property real balance: 0
 
-    signal deleteMember
+    signal deleteParticipant
 
     function formatAmount(amount) {
         return Number(amount).toLocaleString(Qt.locale(), 'f', 2)
@@ -51,13 +51,13 @@ ItemDelegate {
         anchors.margins: 18
         spacing: 20
 
-        // Left section - Member info
+        // Left section - Participant info
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 8
 
             Label {
-                text: memberName
+                text: participantName
                 font.pixelSize: 17
                 font.weight: Font.DemiBold
                 Layout.fillWidth: true
@@ -184,7 +184,7 @@ ItemDelegate {
             icon.width: 20
             icon.height: 20
             Layout.alignment: Qt.AlignVCenter
-            onClicked: control.deleteMember()
+            onClicked: control.deleteParticipant()
             Component.onCompleted: pointerCursor.createObject(this)
         }
     }

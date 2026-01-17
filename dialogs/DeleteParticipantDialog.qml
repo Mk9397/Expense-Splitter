@@ -5,23 +5,27 @@ import QtQuick.Controls.Material
 
 Dialog {
     id: root
-    title: "Remove Member"
+    title: "Remove Participant"
     modal: true
     anchors.centerIn: parent
     width: parent.width * 0.88
     padding: 24
 
-    property string memberId: ""
-    property string memberName: ""
+    property string participantId: ""
+    property string participantName: ""
 
-    signal memberDeleted(string memberId)
+    signal participantDeleted(string participantId)
+
+    Overlay.modal: Rectangle {
+        color: Material.dropShadowColor
+    }
 
     ColumnLayout {
         width: parent.width
         spacing: 16
 
         Label {
-            text: "Are you sure you want to remove \"" + root.memberName + "\" from this trip?"
+            text: "Are you sure you want to remove \"" + root.participantName + "\" from this trip?"
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
         }
@@ -53,7 +57,7 @@ Dialog {
                 Material.background: Material.Red
                 Material.foreground: "white"
                 onClicked: {
-                    root.memberDeleted(root.memberId)
+                    root.participantDeleted(root.participantId)
                     root.close()
                 }
                 Component.onCompleted: pointerCursor.createObject(this)

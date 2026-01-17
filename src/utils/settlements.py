@@ -2,12 +2,14 @@ import heapq
 from typing import Dict, List
 
 
-def get_member_balances(members: List[Dict], expenses: List[Dict]) -> Dict[str, Dict]:
-    """Calculate the balance for each member based on expenses"""
-    member_map = {m["id"]: m["name"] for m in members}
+def get_participant_balances(
+    participants: List[Dict], expenses: List[Dict]
+) -> Dict[str, Dict]:
+    """Calculate the balance for each participant based on expenses"""
+    participant_map = {p["id"]: p["name"] for p in participants}
     balances = {
-        mid: {"name": name, "total_paid": 0.0, "should_pay": 0.0, "balance": 0.0}
-        for mid, name in member_map.items()
+        pid: {"name": name, "total_paid": 0.0, "should_pay": 0.0, "balance": 0.0}
+        for pid, name in participant_map.items()
     }
 
     for expense in expenses:
@@ -17,7 +19,7 @@ def get_member_balances(members: List[Dict], expenses: List[Dict]) -> Dict[str, 
         excluded = set(expense.get("excluded", []))
 
         # Who participates in this expense?
-        participants = [mid for mid in member_map if mid not in excluded]
+        participants = [pid for pid in participant_map if pid not in excluded]
         participant_count = len(participants) or 1  # avoid division by zero
 
         # Credit the payer (even if personal)
@@ -51,14 +53,14 @@ def get_settlement_transactions(balances: Dict[str, Dict]) -> List[Dict]:
     debtors = []  # max-heap → negative values for abs(debt)
     TOLERANCE = 0.01
 
-    for mid, data in balances.items():
+    for pid, data in balances.items():
         balance = round(data["balance"], 2)
         if balance > TOLERANCE:
             heapq.heappush(
-                creditors, (-balance, data["name"], mid)
+                creditors, (-balance, data["name"], pid)
             )  # negative = max heap
         elif balance < -TOLERANCE:
-            heapq.heappush(debtors, (balance, data["name"], mid))  # negative balance
+            heapq.heappush(debtors, (balance, data["name"], pid))  # negative balance
 
     settlements = []
 

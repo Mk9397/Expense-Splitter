@@ -6,8 +6,8 @@ import json
 from pathlib import Path
 import uuid
 
-from .models import ExpenseModel, MemberModel, TripFilterProxy, TripModel
-from .utils.settlements import get_member_balances, get_settlement_transactions
+from .models import ExpenseModel, ParticipantModel, TripFilterProxy, TripModel
+from .utils.settlements import get_participant_balances, get_settlement_transactions
 from .utils.share import create_pdf
 
 QML_IMPORT_NAME = "com.expensesplitter.backend"
@@ -20,16 +20,16 @@ class TripManager(QObject):
     """Backend manager for trips with model integration"""
 
     tripsChanged = Signal()
-    currentTripChanged = Signal()
+    activeTripChanged = Signal()
     expensesChanged = Signal()
-    membersChanged = Signal()
+    participantsChanged = Signal()
 
     def __init__(self):
         super().__init__()
         self.settings = QSettings("Bells Uni", "ExpenseSplitter")
         self._trips = []
-        self._current_trip_id = ""
-        self._current_trip = {}
+        self._active_trip_id = ""
+        self._active_trip = {}
 
         self.load_trips()
 
@@ -38,7 +38,7 @@ class TripManager(QObject):
         self._proxy_model.setSourceModel(self._source_model)
 
         self._expense_model = ExpenseModel()
-        self._member_model = MemberModel()
+        self._participant_model = ParticipantModel()
 
     def load_trips(self):
         """Load trips from storage"""
@@ -67,19 +67,19 @@ class TripManager(QObject):
         self._proxy_model.setFilterFixedString(text)
 
     @Slot(str)
-    def setCurrentTrip(self, trip_id: str):
-        """Set the current trip and update expense model"""
-        self._current_trip_id = trip_id
+    def setActiveTrip(self, trip_id: str):
+        """Set the current active trip and update expense model"""
+        self._active_trip_id = trip_id
         trip = self.getTripById(trip_id)
         if trip:
-            self._current_trip = trip
-            self.currentTripChanged.emit()
+            self._active_trip = trip
+            self.activeTripChanged.emit()
 
             self._expense_model.setExpenses(trip.get("expenses", []))
             self.expensesChanged.emit()
 
-            self._member_model.setMembers(trip.get("members", []))
-            self.membersChanged.emit()
+            self._participant_model.setParticipants(trip.get("participants", []))
+            self.participantsChanged.emit()
 
     @Property(list, notify=tripsChanged)
     def trips(self):
@@ -91,10 +91,10 @@ class TripManager(QObject):
         """Get total number of trips"""
         return len(self._trips)
 
-    @Property("QVariantMap", notify=currentTripChanged)
-    def currentTrip(self):
-        """Get current trip"""
-        return self._current_trip
+    @Property("QVariantMap", notify=activeTripChanged)
+    def activeTrip(self):
+        """Get current active trip"""
+        return self._active_trip
 
     @Property(QObject, notify=tripsChanged)
     def proxyModel(self):
@@ -106,22 +106,22 @@ class TripManager(QObject):
         """Get the model for expenses"""
         return self._expense_model
 
-    @Property(QObject, notify=membersChanged)
-    def memberModel(self):
-        """Get the model for members"""
-        return self._member_model
+    @Property(QObject, notify=participantsChanged)
+    def participantModel(self):
+        """Get the model for participants"""
+        return self._participant_model
 
-    @Property("QVariantList", notify=membersChanged)
-    def membersList(self):
-        """Get the list of members"""
-        if not self._current_trip:
+    @Property("QVariantList", notify=participantsChanged)
+    def participantsList(self):
+        """Get the list of participants"""
+        if not self._active_trip:
             return []
-        return self._current_trip.get("members", [])
+        return self._active_trip.get("participants", [])
 
-    @Property(int, notify=membersChanged)
-    def memberCount(self):
-        """Get the model for members"""
-        return self._member_model.rowCount() if self._member_model else 0
+    @Property(int, notify=participantsChanged)
+    def participantCount(self):
+        """Get the number of participants"""
+        return self._participant_model.rowCount() if self._participant_model else 0
 
     @Slot(str, result=str)
     def addTrip(self, name: str):
@@ -130,7 +130,7 @@ class TripManager(QObject):
             "id": str(uuid.uuid4()),
             "name": name.strip(),
             "currency": self.settings.value("currency", "NGN"),
-            "members": [],
+            "participants": [],
             "expenses": [],
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat(),
@@ -147,28 +147,28 @@ class TripManager(QObject):
                 self._trips.pop(i)
                 self.save_trips()
 
-                if self._current_trip_id == trip_id:
-                    self._current_trip = {}
-                    self._current_trip_id = ""
-                    self.currentTripChanged.emit()
+                if self._active_trip_id == trip_id:
+                    self._active_trip = {}
+                    self._active_trip_id = ""
+                    self.activeTripChanged.emit()
                 return True
         return False
 
     @Slot(str, str, "QVariantList", str, result=bool)
-    def editTrip(self, trip_id: str, name: str, members: list, currency: str):
+    def editTrip(self, trip_id: str, name: str, participants: list, currency: str):
         """Edit a trip's details"""
         for trip in self._trips:
             if trip["id"] == trip_id:
                 trip["name"] = name.strip()
                 trip["currency"] = currency
-                trip["members"] = members
+                trip["participants"] = participants
                 trip["updated_at"] = datetime.now().isoformat()
                 self.save_trips()
 
-                if self._current_trip_id == trip_id:
-                    self.currentTripChanged.emit()
-                    self._member_model.setMembers(trip["members"])
-                    self.membersChanged.emit()
+                if self._active_trip_id == trip_id:
+                    self.activeTripChanged.emit()
+                    self._participant_model.setParticipants(trip["participants"])
+                    self.participantsChanged.emit()
                 return True
         return False
 
@@ -177,11 +177,15 @@ class TripManager(QObject):
         """Share a trip's details"""
         for trip in self._trips:
             if trip["id"] == trip_id:
-                base = Path(QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation))
+                base = Path(
+                    QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
+                )
                 path = base / "ExpenseSplitter" / "Shared" / f"{trip['name']}.pdf"
                 path.parent.mkdir(parents=True, exist_ok=True)
 
-                balances = get_member_balances(trip.get("members", []), trip.get("expenses", []))
+                balances = get_participant_balances(
+                    trip.get("participants", []), trip.get("expenses", [])
+                )
                 settlements = get_settlement_transactions(balances)
                 create_pdf(trip, balances, settlements, path)
                 return str(path)
@@ -200,28 +204,28 @@ class TripManager(QObject):
         self,
         title: str,
         amount: float,
-        member_id: str,
+        participant_id: str,
         split_type: str,
         excluded: list = [],
     ):
         """Add an expense to a specific trip"""
-        if not self._current_trip:
+        if not self._active_trip:
             return ""
 
         expense = {
             "id": str(uuid.uuid4()),
             "title": title,
             "amount": amount,
-            "paid_by": member_id,
+            "paid_by": participant_id,
             "split_type": split_type,
             "excluded": excluded,
             "created_at": datetime.now().isoformat(),
         }
-        self._current_trip["expenses"].append(expense)
-        self._current_trip["updated_at"] = datetime.now().isoformat()
+        self._active_trip["expenses"].append(expense)
+        self._active_trip["updated_at"] = datetime.now().isoformat()
         self.save_trips()
 
-        self._expense_model.setExpenses(self._current_trip["expenses"])
+        self._expense_model.setExpenses(self._active_trip["expenses"])
         self.expensesChanged.emit()
 
         return expense["id"]
@@ -229,15 +233,15 @@ class TripManager(QObject):
     @Slot(str, result=bool)
     def deleteExpense(self, expense_id: str):
         """Delete an expense from a trip"""
-        if not self._current_trip:
+        if not self._active_trip:
             return False
 
-        for i, expense in enumerate(self._current_trip["expenses"]):
+        for i, expense in enumerate(self._active_trip["expenses"]):
             if expense["id"] == expense_id:
-                self._current_trip["expenses"].pop(i)
+                self._active_trip["expenses"].pop(i)
                 self.save_trips()
 
-                self._expense_model.setExpenses(self._current_trip["expenses"])
+                self._expense_model.setExpenses(self._active_trip["expenses"])
                 self.expensesChanged.emit()
                 return True
         return False
@@ -248,102 +252,106 @@ class TripManager(QObject):
         expense_id: str,
         title: str,
         amount: float,
-        member_id: str,
+        participant_id: str,
         split_type: str,
         excluded: list,
     ):
         """Edit an expense in a specific trip"""
-        if not self._current_trip:
+        if not self._active_trip:
             return False
 
-        for expense in self._current_trip["expenses"]:
+        for expense in self._active_trip["expenses"]:
             if expense["id"] == expense_id:
                 expense["title"] = title
                 expense["amount"] = amount
-                expense["paid_by"] = member_id
+                expense["paid_by"] = participant_id
                 expense["split_type"] = split_type
                 expense["excluded"] = excluded
-                self._current_trip["updated_at"] = datetime.now().isoformat()
+                self._active_trip["updated_at"] = datetime.now().isoformat()
                 self.save_trips()
 
-                self._expense_model.setExpenses(self._current_trip["expenses"])
+                self._expense_model.setExpenses(self._active_trip["expenses"])
                 self.expensesChanged.emit()
                 return True
         return False
 
     @Property(float, notify=expensesChanged)
-    def totalTripAmount(self):
+    def totalSpent(self):
         """Get total expenses for current trip"""
-        if not self._current_trip:
+        if not self._active_trip:
             return 0.0
         return sum(
-            expense["amount"] for expense in self._current_trip.get("expenses", [])
+            expense["amount"] for expense in self._active_trip.get("expenses", [])
         )
 
     @Slot(str, result=str)
-    def addMember(self, name: str):
-        """Add a member to a specific trip"""
-        if not self._current_trip:
+    def addParticipant(self, name: str):
+        """Add a participant to a specific trip"""
+        if not self._active_trip:
             return ""
 
-        member = {"id": str(uuid.uuid4()), "name": name}
-        self._current_trip["members"].append(member)
+        participant = {"id": str(uuid.uuid4()), "name": name}
+        self._active_trip["participants"].append(participant)
 
-        # Auto-exclude new member from all existing expenses
-        # new_member_id = member["id"]
+        # Auto-exclude new participant from all existing expenses
+        # new_participant_id = participant["id"]
         # for expense in self._current_trip.get("expenses", []):
         #     if "excluded" not in expense:
         #         expense["excluded"] = []
-        #     if new_member_id not in expense["excluded"]:
-        #         expense["excluded"].append(new_member_id)
+        #     if new_participant_id not in expense["excluded"]:
+        #         expense["excluded"].append(new_participant_id)
 
-        self._current_trip["updated_at"] = datetime.now().isoformat()
+        self._active_trip["updated_at"] = datetime.now().isoformat()
         self.save_trips()
 
-        self._member_model.setMembers(self._current_trip["members"])
-        self.membersChanged.emit()
+        self._participant_model.setParticipants(self._active_trip["participants"])
+        self.participantsChanged.emit()
 
         # self.expensesChanged.emit()
-        return member["id"]
+        return participant["id"]
 
     @Slot(str, result=bool)
-    def deleteMember(self, member_id: str):
-        """Delete a member from a trip"""
+    def deleteParticipant(self, participant_id: str):
+        """Delete a participant from a trip"""
         deleted = False
-        if not self._current_trip:
+        if not self._active_trip:
             return deleted
 
-        for i, member in enumerate(self._current_trip["members"]):
-            if member["id"] == member_id:
-                self._current_trip["members"].pop(i)
+        for i, participant in enumerate(self._active_trip["participants"]):
+            if participant["id"] == participant_id:
+                self._active_trip["participants"].pop(i)
                 self.save_trips()
 
-                self._member_model.setMembers(self._current_trip["members"])
-                self.membersChanged.emit()
+                self._participant_model.setParticipants(
+                    self._active_trip["participants"]
+                )
+                self.participantsChanged.emit()
                 deleted = True
 
         if deleted:
-            for expense in self._current_trip.get("expenses", []):
-                if "excluded" in expense and member_id in expense["excluded"]:
-                    expense["excluded"].remove(member_id)
+            for expense in self._active_trip.get("expenses", []):
+                if "excluded" in expense and participant_id in expense["excluded"]:
+                    expense["excluded"].remove(participant_id)
             self.save_trips()
             self.expensesChanged.emit()
         return deleted
 
     @Slot(str, str, result=bool)
-    def editMember(self, member_id: str, name: str):
-        """Edit a member in a specific trip"""
-        if not self._current_trip:
+    def editParticipant(self, participant_id: str, name: str):
+        """Edit a participant in a specific trip"""
+        if not self._active_trip:
             return False
 
-        for member in self._current_trip["members"]:
-            if member["id"] == member_id:
-                member["name"] = name
-                self._current_trip["updated_at"] = datetime.now().isoformat()
+        for participant in self._active_trip["participants"]:
+            if participant["id"] == participant_id:
+                participant["name"] = name
+                self._active_trip["updated_at"] = datetime.now().isoformat()
                 self.save_trips()
 
-                self._member_model.setMembers(self._current_trip["members"])
-                self.membersChanged.emit()
+                self._participant_model.setParticipants(
+                    self._active_trip["participants"]
+                )
+                self.participantsChanged.emit()
                 return True
         return False
 
@@ -352,38 +360,38 @@ class TripManager(QObject):
         return str(uuid.uuid4())
 
     @Property(dict, notify=expensesChanged)
-    def memberBalances(self):
-        """Returns a dictionary with balance info for each member"""
-        if not self._current_trip:
+    def participantBalances(self):
+        """Returns a dictionary with balance info for each participant"""
+        if not self._active_trip:
             return {}
 
-        members = self._current_trip.get("members", [])
-        expenses = self._current_trip.get("expenses", [])
-        balances = get_member_balances(members, expenses)
+        participants = self._active_trip.get("participants", [])
+        expenses = self._active_trip.get("expenses", [])
+        balances = get_participant_balances(participants, expenses)
         return balances
 
     @Property(float, notify=expensesChanged)
-    def averageShouldPay(self):
-        """Get average 'should_pay' across members for the current trip"""
-        balances = self.memberBalances
+    def averageSharePerPerson(self):
+        """Get average 'should_pay' across participants for the current trip"""
+        balances = self.participantBalances
         if not balances:
             return 0.0
         total_should_pay = sum(data["should_pay"] for data in balances.values())
         return total_should_pay / len(balances) if balances else 0.0
 
     @Slot(str, result="QVariantMap")
-    def getMemberBalance(self, member_id: str):
-        """Get balance info for a single member"""
-        all_balances = self.memberBalances
+    def getParticipantBalance(self, participant_id: str):
+        """Get balance info for a single participant"""
+        all_balances = self.participantBalances
         return all_balances.get(
-            member_id,
+            participant_id,
             {"name": "Unknown", "total_paid": 0.0, "should_pay": 0.0, "balance": 0.0},
         )
 
     @Slot(result="QVariantList")
-    def getSettlementSuggestions(self):
+    def getSuggestedSettlements(self):
         """Returns list of suggested payments: who should pay whom how much"""
-        balances = self.memberBalances
+        balances = self.participantBalances
         if not balances:
             return []
 
@@ -397,6 +405,7 @@ import os
 import sys
 import subprocess
 
+
 class ShareHelper(QObject):
 
     @Slot(str)
@@ -407,10 +416,8 @@ class ShareHelper(QObject):
             subprocess.run(["open", "-R", path])
         else:
             # Linux fallback
-            QDesktopServices.openUrl(
-                QUrl.fromLocalFile(os.path.dirname(path))
-            )
-    
+            QDesktopServices.openUrl(QUrl.fromLocalFile(os.path.dirname(path)))
+
     @Slot(str)
     def openFile(self, path):
         QDesktopServices.openUrl(QUrl.fromLocalFile(path))
