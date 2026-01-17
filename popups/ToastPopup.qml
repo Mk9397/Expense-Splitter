@@ -89,7 +89,7 @@ Popup {
                         hoverEnabled: true
                         onEntered: pathToolTip.visible = true
                         onExited: pathToolTip.visible = false
-                        onClicked: shareHelper.showInFolder(control.pdfPath)
+                        onClicked: fileActions.showInFolder(control.pdfPath)
                     }
                     ToolTip {
                         id: pathToolTip
@@ -114,7 +114,7 @@ Popup {
             Button {
                 text: "Show in Folder"
                 onClicked: {
-                    shareHelper.showInFolder(control.pdfPath)
+                    fileActions.showInFolder(control.pdfPath)
                     control.close()
                 }
                 Component.onCompleted: pointerCursor.createObject(this)
@@ -124,7 +124,7 @@ Popup {
                 text: "Open"
                 highlighted: true
                 onClicked: {
-                    shareHelper.openFile(control.pdfPath)
+                    fileActions.openFile(control.pdfPath)
                     control.close()
                 }
                 Component.onCompleted: pointerCursor.createObject(this)

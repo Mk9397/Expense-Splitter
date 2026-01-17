@@ -7,8 +7,11 @@ from pathlib import Path
 import uuid
 
 from .models import ExpenseModel, ParticipantModel, TripFilterProxy, TripModel
-from .utils.settlements import get_participant_balances, get_settlement_transactions
-from .utils.share import create_pdf
+from .services.settlement_service import (
+    get_participant_balances,
+    get_settlement_transactions,
+)
+from .services.share_service import create_pdf
 
 QML_IMPORT_NAME = "com.expensesplitter.backend"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -356,22 +359,20 @@ class TripManager(QObject):
         return False
 
     @Slot(result=str)
-    def generateId(self):
+    def generateId(self) -> str:
         return str(uuid.uuid4())
 
     @Property(dict, notify=expensesChanged)
-    def participantBalances(self):
+    def participantBalances(self) -> dict:
         """Returns a dictionary with balance info for each participant"""
         if not self._active_trip:
             return {}
-
         participants = self._active_trip.get("participants", [])
         expenses = self._active_trip.get("expenses", [])
-        balances = get_participant_balances(participants, expenses)
-        return balances
+        return get_participant_balances(participants, expenses)
 
     @Property(float, notify=expensesChanged)
-    def averageSharePerPerson(self):
+    def averageSharePerPerson(self) -> float:
         """Get average 'should_pay' across participants for the current trip"""
         balances = self.participantBalances
         if not balances:
@@ -380,7 +381,7 @@ class TripManager(QObject):
         return total_should_pay / len(balances) if balances else 0.0
 
     @Slot(str, result="QVariantMap")
-    def getParticipantBalance(self, participant_id: str):
+    def getParticipantBalance(self, participant_id: str) -> dict:
         """Get balance info for a single participant"""
         all_balances = self.participantBalances
         return all_balances.get(
@@ -389,35 +390,9 @@ class TripManager(QObject):
         )
 
     @Slot(result="QVariantList")
-    def getSuggestedSettlements(self):
+    def getSuggestedSettlements(self) -> list:
         """Returns list of suggested payments: who should pay whom how much"""
         balances = self.participantBalances
         if not balances:
             return []
-
-        suggestions = get_settlement_transactions(balances)
-        return suggestions
-
-
-from PySide6.QtCore import Slot, QUrl
-from PySide6.QtGui import QDesktopServices
-import os
-import sys
-import subprocess
-
-
-class ShareHelper(QObject):
-
-    @Slot(str)
-    def showInFolder(self, path):
-        if sys.platform.startswith("win"):
-            subprocess.run(["explorer", "/select,", os.path.normpath(path)])
-        elif sys.platform == "darwin":
-            subprocess.run(["open", "-R", path])
-        else:
-            # Linux fallback
-            QDesktopServices.openUrl(QUrl.fromLocalFile(os.path.dirname(path)))
-
-    @Slot(str)
-    def openFile(self, path):
-        QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+        return get_settlement_transactions(balances)
