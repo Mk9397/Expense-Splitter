@@ -418,16 +418,19 @@ Page {
                     model: root.participantModel
 
                     delegate: ParticipantCard {
-                        width: ListView.view.width
+                        required property string id
+                        required property string name
 
-                        property var participantBalance: tripManager.getParticipantBalance(
-                                                             id)
+                        width: ListView.view.width
                         participantName: name
                         currencySymbol: root.currencySymbol
 
-                        totalPaid: participantBalance ? participantBalance.total_paid : 0
-                        shouldPay: participantBalance ? participantBalance.should_pay : 0
-                        balance: participantBalance ? participantBalance.balance : 0
+                        property var balanceData: tripManager.participantBalances[id]
+                                                  ?? {}
+
+                        totalPaid: balanceData.total_paid ?? 0
+                        shouldPay: balanceData.should_pay ?? 0
+                        balance: balanceData.balance ?? 0
 
                         onDeleteParticipant: {
                             deleteParticipantDialog.participantId = id
@@ -506,9 +509,7 @@ Page {
                     spacing: 10
                     clip: true
 
-                    model: ListModel {
-                        id: settlementModel
-                    }
+                    model: tripManager ? tripManager.settlementModel : null
 
                     delegate: SettlementCard {
                         width: ListView.view.width
@@ -522,15 +523,7 @@ Page {
         }
     }
 
-    Component.onCompleted: {
-        tripManager.setActiveTrip(tripId)
-
-        let suggestions = tripManager ? tripManager.getSuggestedSettlements(
-                                            ) : []
-        for (let suggestion of suggestions) {
-            settlementModel.append(suggestion)
-        }
-    }
+    Component.onCompleted: tripManager.setActiveTrip(tripId)
 
     ToastPopup {
         id: shareToast

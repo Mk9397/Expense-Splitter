@@ -13,6 +13,8 @@ class TripModel(QAbstractListModel):
     ParticipantCountRole = Qt.UserRole + 3
     ParticipantsRole = Qt.UserRole + 4
     CurrencyRole = Qt.UserRole + 5
+    CreatedAtRole = Qt.UserRole + 6
+    UpdatedAtRole = Qt.UserRole + 7
 
     def __init__(self, trips_list, parent=None):
         super().__init__(parent)
@@ -36,6 +38,10 @@ class TripModel(QAbstractListModel):
             return trip.get("participants", [])
         if role == self.CurrencyRole:
             return trip["currency"]
+        if role == self.CreatedAtRole:
+            return trip["created_at"]
+        if role == self.UpdatedAtRole:
+            return trip["updated_at"]
         return None
 
     def roleNames(self):
@@ -45,6 +51,8 @@ class TripModel(QAbstractListModel):
             self.ParticipantCountRole: b"participant_count",
             self.ParticipantsRole: b"participants",
             self.CurrencyRole: b"currency",
+            self.CreatedAtRole: b"created_at",
+            self.UpdatedAtRole: b"updated_at",
         }
 
     def refresh(self):
@@ -57,6 +65,11 @@ class TripFilterProxy(QSortFilterProxyModel):
         super().__init__(parent)
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.setFilterRole(TripModel.NameRole)
+
+        self.setSortRole(TripModel.UpdatedAtRole)
+        self.setDynamicSortFilter(True)
+
+        self.sort(0, Qt.DescendingOrder)
 
 
 class ExpenseModel(QAbstractListModel):
@@ -172,3 +185,50 @@ class ParticipantModel(QAbstractListModel):
             if participant["id"] == participant_id:
                 return participant["name"]
         return ""
+
+
+class SettlementModel(QAbstractListModel):
+    FromIdRole = Qt.UserRole + 1
+    FromNameRole = Qt.UserRole + 2
+    ToIdRole = Qt.UserRole + 3
+    ToNameRole = Qt.UserRole + 4
+    AmountRole = Qt.UserRole + 5
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._settlements = []
+
+    def setSettlements(self, settlements):
+        """Update the expense list"""
+        self.beginResetModel()
+        self._settlements = settlements
+        self.endResetModel()
+
+    def rowCount(self, parent=QModelIndex()):
+        return len(self._settlements)
+
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid() or not (0 <= index.row() < len(self._settlements)):
+            return None
+
+        settlement = self._settlements[index.row()]
+        if role == self.FromIdRole:
+            return settlement["from_id"]
+        if role == self.FromNameRole:
+            return settlement["from_name"]
+        if role == self.ToIdRole:
+            return settlement["to_id"]
+        if role == self.ToNameRole:
+            return settlement["to_name"]
+        if role == self.AmountRole:
+            return settlement["amount"]
+        return None
+
+    def roleNames(self):
+        return {
+            self.FromIdRole: b"from_id",
+            self.FromNameRole: b"from_name",
+            self.ToIdRole: b"to_id",
+            self.ToNameRole: b"to_name",
+            self.AmountRole: b"amount",
+        }
