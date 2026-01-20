@@ -108,12 +108,12 @@ Page {
         }
 
         RowLayout {
+            visible: totalTrips > 0
             Label {
                 text: "Your Groups"
                 font.pixelSize: 16
                 font.weight: Font.DemiBold
                 opacity: 0.87
-                visible: totalTrips > 0
                 Layout.fillWidth: true
                 Layout.topMargin: 4
             }

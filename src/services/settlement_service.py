@@ -32,7 +32,7 @@ def get_participant_balances(
                 balances[paid_by]["should_pay"] += amount
             if paid_by and paid_by not in balances:
                 print(
-                    "Warning: Unknown payer", paid_by, "for expense", expense.get("id")
+                    f"Warning: Unknown payer {paid_by} for expense {expense.get("id")}"
                 )
 
         else:  # "equal" (default)

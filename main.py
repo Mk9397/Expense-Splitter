@@ -2,21 +2,28 @@
 import sys
 from pathlib import Path
 
+from PySide6.QtCore import QSettings
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 import resources_rc
+from src.data.trip_repository import TripRepository
 from src.file_actions import FileSystemActions
 from src.settings_manager import SettingsManager
 from src.trip_manager import TripManager
+
+QML_IMPORT_NAME = "com.expensesplitter.backend"
+QML_IMPORT_MAJOR_VERSION = 1
+QML_IMPORT_MINOR_VERSION = 0
 
 if __name__ == "__main__":
     app = QGuiApplication(sys.argv)
     app.setOrganizationName("Bells Uni")
     app.setApplicationName("ExpenseSplitter")
 
+    settings = QSettings("Bells Uni", "ExpenseSplitter")
     settings_manager = SettingsManager()
-    trip_manager = TripManager()
+    trip_manager = TripManager(settings_manager, TripRepository(settings))
     file_actions = FileSystemActions()
 
     engine = QQmlApplicationEngine()

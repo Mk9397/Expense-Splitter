@@ -1,11 +1,11 @@
 # This Python file uses the following encoding: utf-8
-from PySide6.QtCore import Property, QObject, QSettings, QStandardPaths, Signal, Slot
+from PySide6.QtCore import Property, QObject, QStandardPaths, Signal, Slot
 from PySide6.QtQml import QmlElement
 from datetime import datetime
-import json
 from pathlib import Path
 import uuid
 
+from .settings_manager import SettingsManager
 from .models import (
     ExpenseModel,
     ParticipantModel,
@@ -35,9 +35,11 @@ class TripManager(QObject):
     participantsChanged = Signal()
     settlementsChanged = Signal()
 
-    def __init__(self):
+    def __init__(self, settings: SettingsManager, repo):
         super().__init__()
-        self.settings = QSettings("Bells Uni", "ExpenseSplitter")
+        self.settings = settings
+        self.repo = repo
+
         self._trips = []
         self._active_trip_id = ""
         self._active_trip = {}
@@ -55,11 +57,7 @@ class TripManager(QObject):
     # ── Persistence ────────────────────────────────────────
     def load_trips(self):
         """Load trips from storage"""
-        trips_json = self.settings.value("trips", "[]")
-        try:
-            self._trips = json.loads(trips_json)
-        except json.JSONDecodeError:
-            self._trips = []
+        self._trips = self.repo.load_trips()
 
         if hasattr(self, "_source_model"):
             self._source_model.refresh()
@@ -67,8 +65,8 @@ class TripManager(QObject):
 
     def save_trips(self):
         """Save trips to storage"""
-        trips_json = json.dumps(self._trips)
-        self.settings.setValue("trips", trips_json)
+        self.repo.save_trips(self._trips)
+
         if hasattr(self, "_source_model"):
             self._source_model.refresh()
         self.tripsChanged.emit()
@@ -164,7 +162,7 @@ class TripManager(QObject):
         trip = {
             "id": str(uuid.uuid4()),
             "name": name.strip(),
-            "currency": self.settings.value("currency", "NGN"),
+            "currency": self.settings.currency,
             "participants": [],
             "expenses": [],
             "created_at": datetime.now().isoformat(),
