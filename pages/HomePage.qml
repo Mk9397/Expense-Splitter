@@ -105,13 +105,52 @@ Page {
             visible: totalTrips > 0
         }
 
-        Label {
-            text: "Your Groups"
-            font.pixelSize: 16
-            font.weight: Font.DemiBold
-            Layout.topMargin: 4
-            opacity: 0.87
-            visible: totalTrips > 0
+        RowLayout {
+            Label {
+                text: "Your Groups"
+                font.pixelSize: 16
+                font.weight: Font.DemiBold
+                opacity: 0.87
+                visible: totalTrips > 0
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+            }
+            ToolButton {
+                icon.source: "qrc:/icons/menu.svg"
+                onClicked: sortMenu.open()
+                Component.onCompleted: pointerCursor.createObject(this)
+            }
+
+            Menu {
+                id: sortMenu
+                x: parent.width
+                y: parent.height
+
+                MenuItem {
+                    text: "Name (A–Z)"
+                    onTriggered: tripList.model.sortByNameAsc()
+                }
+                MenuItem {
+                    text: "Name (Z–A)"
+                    onTriggered: tripList.model.sortByNameDesc()
+                }
+                MenuItem {
+                    text: "Recently updated"
+                    onTriggered: tripList.model.sortByUpdatedDesc()
+                }
+                MenuItem {
+                    text: "Oldest updated"
+                    onTriggered: tripList.model.sortByUpdatedAsc()
+                }
+                MenuItem {
+                    text: "Recently created"
+                    onTriggered: tripList.model.sortByCreatedDesc()
+                }
+                MenuItem {
+                    text: "Oldest created"
+                    onTriggered: tripList.model.sortByCreatedAsc()
+                }
+            }
         }
 
         // Main Content Area

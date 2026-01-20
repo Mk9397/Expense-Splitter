@@ -63,13 +63,43 @@ class TripModel(QAbstractListModel):
 class TripFilterProxy(QSortFilterProxyModel):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setDynamicSortFilter(True)
+
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.setFilterRole(TripModel.NameRole)
 
         self.setSortRole(TripModel.UpdatedAtRole)
-        self.setDynamicSortFilter(True)
-
         self.sort(0, Qt.DescendingOrder)
+
+    @Slot()
+    def sortByNameAsc(self):
+        self.setSortRole(TripModel.NameRole)
+        self.sort(0, Qt.AscendingOrder)
+
+    @Slot()
+    def sortByNameDesc(self):
+        self.setSortRole(TripModel.NameRole)
+        self.sort(0, Qt.DescendingOrder)
+
+    @Slot()
+    def sortByUpdatedDesc(self):
+        self.setSortRole(TripModel.UpdatedAtRole)
+        self.sort(0, Qt.DescendingOrder)
+
+    @Slot()
+    def sortByUpdatedAsc(self):
+        self.setSortRole(TripModel.UpdatedAtRole)
+        self.sort(0, Qt.AscendingOrder)
+
+    @Slot()
+    def sortByCreatedDesc(self):
+        self.setSortRole(TripModel.CreatedAtRole)
+        self.sort(0, Qt.DescendingOrder)
+
+    @Slot()
+    def sortByCreatedAsc(self):
+        self.setSortRole(TripModel.CreatedAtRole)
+        self.sort(0, Qt.AscendingOrder)
 
 
 class ExpenseModel(QAbstractListModel):
