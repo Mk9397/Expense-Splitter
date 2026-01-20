@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
+import theme
 import "../components"
 
 Dialog {
@@ -139,6 +140,7 @@ Dialog {
                 Layout.fillWidth: true
                 height: 1
                 color: Material.foreground
+                opacity: 0.3
             }
 
             ListView {
@@ -153,41 +155,12 @@ Dialog {
 
                 ScrollBar.vertical: ScrollBar {
                     policy: ScrollBar.AsNeeded
+                    hoverEnabled: true
                     width: 10
-                }
 
-                add: Transition {
-                    NumberAnimation {
-                        property: "opacity"
-                        from: 0
-                        to: 1
-                        duration: 200
-                    }
-                    NumberAnimation {
-                        property: "scale"
-                        from: 0.8
-                        to: 1
-                        duration: 200
-                        easing.type: Easing.OutBack
-                    }
-                }
-                remove: Transition {
-                    NumberAnimation {
-                        property: "opacity"
-                        to: 0
-                        duration: 150
-                    }
-                    NumberAnimation {
-                        property: "scale"
-                        to: 0.8
-                        duration: 150
-                    }
-                }
-                displaced: Transition {
-                    NumberAnimation {
-                        properties: "x,y"
-                        duration: 200
-                        easing.type: Easing.OutQuad
+                    contentItem: Rectangle {
+                        radius: 5
+                        color: Material.scrollBarColor
                     }
                 }
 
@@ -196,8 +169,8 @@ Dialog {
 
                     background: Rectangle {
                         radius: 12
-                        color: ApplicationWindow.window.cardBackground
-                        border.color: ApplicationWindow.window.cardBorder
+                        color: ThemeManager.cardBackground
+                        border.color: ThemeManager.cardBorder
                         border.width: 1
 
                         Behavior on color {

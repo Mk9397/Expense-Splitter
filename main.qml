@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
+import theme
 import "pages"
 
 ApplicationWindow {
@@ -17,8 +18,12 @@ ApplicationWindow {
 
     property int themeMode: Material.System
     Material.theme: themeMode
+    // Material.elevation: 2
     Material.accent: Material.Blue
     Material.primary: Material.Blue
+
+    // Material.foreground: Material.theme === Material.Dark ? "#e0e0e0" : "#212121"
+    // Material.background: Material.theme === Material.Dark ? "#121212" : "#ffffff"
 
     // Theme settings
     Component.onCompleted: {
@@ -30,6 +35,7 @@ ApplicationWindow {
         } else {
             themeMode = Material.System
         }
+        ThemeManager.theme = themeMode
     }
 
     // Listen for theme changes from settings
@@ -44,43 +50,9 @@ ApplicationWindow {
             } else {
                 app.themeMode = Material.System
             }
+            ThemeManager.theme = themeMode
         }
     }
-
-    // Computed properties for consistent styling
-    readonly property color cardBackground: Material.theme
-                                            === Material.Dark ? Qt.rgba(
-                                                                    255 / 255,
-                                                                    255 / 255,
-                                                                    255 / 255,
-                                                                    0.05) : "#FFFFFF"
-
-    readonly property color cardBorder: Material.theme
-                                        === Material.Dark ? Qt.rgba(
-                                                                255 / 255,
-                                                                255 / 255,
-                                                                255 / 255,
-                                                                0.12) : Material.color(
-                                                                Material.Grey,
-                                                                Material.Shade200)
-
-    readonly property color accentCardBackground: Material.theme
-                                                  === Material.Dark ? Qt.rgba(
-                                                                          33 / 255,
-                                                                          150 / 255,
-                                                                          243 / 255,
-                                                                          0.12) : Material.color(
-                                                                          Material.Blue,
-                                                                          Material.Shade50)
-
-    readonly property color accentCardBorder: Material.theme
-                                              === Material.Dark ? Qt.rgba(
-                                                                      33 / 255,
-                                                                      150 / 255,
-                                                                      243 / 255,
-                                                                      0.3) : Material.color(
-                                                                      Material.Blue,
-                                                                      Material.Shade100)
 
     StackView {
         id: stack

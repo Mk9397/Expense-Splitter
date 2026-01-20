@@ -20,11 +20,16 @@ if __name__ == "__main__":
     file_actions = FileSystemActions()
 
     engine = QQmlApplicationEngine()
+
+    root_dir = Path(__file__).resolve().parent
+    qml_dir = root_dir / "qml" if (root_dir / "qml").exists() else root_dir
+
+    engine.addImportPath(str(qml_dir))
     engine.rootContext().setContextProperty("settingsManager", settings_manager)
     engine.rootContext().setContextProperty("fileActions", file_actions)
     engine.rootContext().setContextProperty("tripManager", trip_manager)
 
-    qml_file = Path(__file__).resolve().parent / "main.qml"
+    qml_file = qml_dir / "main.qml"
     engine.load(qml_file)
 
     if not engine.rootObjects():

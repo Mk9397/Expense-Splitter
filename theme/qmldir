@@ -1,0 +1,2 @@
+module theme
+singleton ThemeManager 1.0 ThemeManager.qml

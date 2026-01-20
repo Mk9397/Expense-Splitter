@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
+import theme
 
 RowLayout {
     Layout.fillWidth: true
@@ -11,8 +12,8 @@ RowLayout {
         Layout.fillWidth: true
         height: 48
         radius: 24
-        color: ApplicationWindow.window.cardBackground
-        border.color: searchField.activeFocus ? Material.accent : ApplicationWindow.window.cardBorder
+        color: ThemeManager.cardBackground
+        border.color: searchField.activeFocus ? Material.accent : ThemeManager.cardBorder
         border.width: searchField.activeFocus ? 2 : 1
 
         Behavior on border.color {

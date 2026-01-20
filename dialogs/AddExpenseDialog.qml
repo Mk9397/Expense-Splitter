@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
+import theme
 import "../popups"
 
 Dialog {
@@ -92,9 +93,9 @@ Dialog {
             }
 
             background: Rectangle {
-                color: ApplicationWindow.window.cardBackground
+                color: ThemeManager.cardBackground
                 radius: 12
-                border.color: ApplicationWindow.window.cardBorder
+                border.color: ThemeManager.cardBorder
                 border.width: 1
             }
             Component.onCompleted: pointerCursor.createObject(this)

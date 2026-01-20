@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 import QtQuick.Effects
+import theme
 
 ItemDelegate {
     id: control
@@ -15,8 +16,8 @@ ItemDelegate {
 
     background: Rectangle {
         radius: 12
-        color: ApplicationWindow.window ? ApplicationWindow.window.cardBackground : Material.Blue
-        border.color: ApplicationWindow.window ? ApplicationWindow.window.cardBorder : Material.Blue
+        color: ThemeManager.cardBackground
+        border.color: ThemeManager.cardBorder
         border.width: 1
 
         layer.enabled: !control.pressed

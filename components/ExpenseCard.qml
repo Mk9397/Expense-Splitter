@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 import QtQuick.Effects
+import theme
 
 ItemDelegate {
     id: control
@@ -35,15 +36,13 @@ ItemDelegate {
                             Material.theme === Material.Dark ? Material.Shade800 : Material.Shade50)
             if (control.hovered)
                 return Material.theme === Material.Dark ? Qt.rgba(
-                                                              255 / 255,
-                                                              255 / 255,
-                                                              255 / 255,
+                                                              1, 1, 1,
                                                               0.08) : Material.color(
                                                               Material.Grey,
                                                               Material.Shade50)
-            return ApplicationWindow.window ? ApplicationWindow.window.cardBackground : Material.Blue
+            return ThemeManager.cardBackground
         }
-        border.color: ApplicationWindow.window ? ApplicationWindow.window.cardBorder : Material.Blue
+        border.color: ThemeManager.cardBorder
         border.width: 1
 
         layer.enabled: !control.pressed
@@ -65,8 +64,7 @@ ItemDelegate {
             height: 44
             radius: 22
             color: Material.theme === Material.Dark ? Qt.rgba(
-                                                          255 / 255, 255 / 255,
-                                                          255 / 255,
+                                                          1, 1, 1,
                                                           0.1) : Material.color(
                                                           Material.Grey,
                                                           Material.Shade100)

@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
+
+import theme
 import "../components"
 import "../dialogs"
 import "../popups"
@@ -171,8 +173,8 @@ Page {
                     width: 80
                     height: 80
                     radius: 40
-                    color: ApplicationWindow.window.accentCardBackground
-                    border.color: ApplicationWindow.window.accentCardBorder
+                    color: ThemeManager.accentCardBackground
+                    border.color: ThemeManager.accentCardBorder
                     border.width: 1
 
                     Image {

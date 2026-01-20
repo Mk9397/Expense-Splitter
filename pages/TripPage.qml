@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 import QtQuick.Effects
+
+import theme
 import "../components"
 import "../dialogs"
 import "../popups"
@@ -124,8 +126,8 @@ Page {
 
             height: 88
             radius: 16
-            color: ApplicationWindow.window.accentCardBackground
-            border.color: ApplicationWindow.window.accentCardBorder
+            color: ThemeManager.accentCardBackground
+            border.color: ThemeManager.accentCardBorder
             border.width: 1
 
             layer.enabled: true
@@ -168,7 +170,7 @@ Page {
                     Layout.fillHeight: true
                     Layout.topMargin: 12
                     Layout.bottomMargin: 12
-                    color: ApplicationWindow.window.accentCardBorder
+                    color: ThemeManager.accentCardBorder
                 }
 
                 ColumnLayout {
@@ -197,7 +199,7 @@ Page {
                     Layout.fillHeight: true
                     Layout.topMargin: 12
                     Layout.bottomMargin: 12
-                    color: ApplicationWindow.window.accentCardBorder
+                    color: ThemeManager.accentCardBorder
                 }
 
                 ColumnLayout {
@@ -289,13 +291,11 @@ Page {
                         width: 56
                         height: 22
                         radius: 11
-                        color: Material.theme
-                               === Material.Dark ? Qt.rgba(
-                                                       255 / 255, 255 / 255,
-                                                       255 / 255,
-                                                       0.1) : Material.color(
-                                                       Material.Grey,
-                                                       Material.Shade200)
+                        color: Material.theme === Material.Dark ? Qt.rgba(
+                                                                      1, 1, 1,
+                                                                      0.1) : Material.color(
+                                                                      Material.Grey,
+                                                                      Material.Shade200)
 
                         Label {
                             anchors.centerIn: parent
@@ -336,6 +336,7 @@ Page {
                             editExpenseDialog.paidById = paid_by
                             editExpenseDialog.splitType = split_type
                             editExpenseDialog.excludedIds = excluded.slice()
+                            editExpenseDialog.participantModel = root.participantModel
                             editExpenseDialog.open()
                         }
                         onDeleteExpense: {
@@ -356,7 +357,10 @@ Page {
                     font.weight: Font.DemiBold
                     Material.elevation: 3
                     highlighted: true
-                    onClicked: addExpenseDialog.open()
+                    onClicked: {
+                        addExpenseDialog.participantModel = root.participantModel
+                        addExpenseDialog.open()
+                    }
                     Component.onCompleted: pointerCursor.createObject(this)
                 }
             }
@@ -388,13 +392,11 @@ Page {
                         width: 84
                         height: 22
                         radius: 11
-                        color: Material.theme
-                               === Material.Dark ? Qt.rgba(
-                                                       255 / 255, 255 / 255,
-                                                       255 / 255,
-                                                       0.1) : Material.color(
-                                                       Material.Grey,
-                                                       Material.Shade200)
+                        color: Material.theme === Material.Dark ? Qt.rgba(
+                                                                      1, 1, 1,
+                                                                      0.1) : Material.color(
+                                                                      Material.Grey,
+                                                                      Material.Shade200)
 
                         Label {
                             anchors.centerIn: parent
@@ -482,13 +484,11 @@ Page {
                         width: 56
                         height: 22
                         radius: 11
-                        color: Material.theme
-                               === Material.Dark ? Qt.rgba(
-                                                       255 / 255, 255 / 255,
-                                                       255 / 255,
-                                                       0.1) : Material.color(
-                                                       Material.Grey,
-                                                       Material.Shade200)
+                        color: Material.theme === Material.Dark ? Qt.rgba(
+                                                                      1, 1, 1,
+                                                                      0.1) : Material.color(
+                                                                      Material.Grey,
+                                                                      Material.Shade200)
 
                         Label {
                             anchors.centerIn: parent
@@ -550,7 +550,6 @@ Page {
 
     AddExpenseDialog {
         id: addExpenseDialog
-        participantModel: root.participantModel
         onExpenseCreated: function (expenseTitle, expenseAmount, paidBy, split_type, excluded) {
             tripManager.addExpense(expenseTitle, expenseAmount, paidBy,
                                    split_type, excluded)
@@ -559,7 +558,6 @@ Page {
 
     EditExpenseDialog {
         id: editExpenseDialog
-        participantModel: root.participantModel
         onExpenseEdited: function (expenseId, expenseTitle, expenseAmount, paidBy, split_type, excluded) {
             tripManager.editExpense(expenseId, expenseTitle, expenseAmount,
                                     paidBy, split_type, excluded)
