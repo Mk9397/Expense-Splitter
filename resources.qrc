@@ -1,30 +1,41 @@
 <RCC>
-    <qresource prefix="/">
-        <file>icons/more_vert.svg</file>
-        <file>icons/settings.svg</file>
-        <file>icons/add.svg</file>
-        <file>icons/add_box.svg</file>
-        <file>icons/chevron_left.svg</file>
-        <file>icons/chevron_right.svg</file>
-        <file>icons/close.svg</file>
-        <file>icons/flight.svg</file>
-        <file>icons/flights_and_hotels.svg</file>
-        <file>icons/food_bank.svg</file>
-        <file>icons/home.svg</file>
-        <file>icons/hotel.svg</file>
-        <file>icons/menu.svg</file>
-        <file>icons/search.svg</file>
-        <file>icons/share.svg</file>
-        <file>icons/transportation.svg</file>
-        <file>icons/more_horiz.svg</file>
-        <file>icons/delete.svg</file>
-        <file>icons/delete_forever.svg</file>
-        <file>icons/edit.svg</file>
-        <file>icons/remove.svg</file>
-        <file>icons/check.svg</file>
-        <file>icons/group.svg</file>
-        <file>icons/group_add.svg</file>
-        <file>icons/block.svg</file>
-        <file>icons/arrow_right_alt.svg</file>
+    <qresource prefix="/icons">
+        <file alias="more_vert.svg">icons/more_vert.svg</file>
+        <file alias="settings.svg">icons/settings.svg</file>
+        <file alias="add.svg">icons/add.svg</file>
+        <file alias="add_box.svg">icons/add_box.svg</file>
+        <file alias="chevron_left.svg">icons/chevron_left.svg</file>
+        <file alias="chevron_right.svg">icons/chevron_right.svg</file>
+        <file alias="close.svg">icons/close.svg</file>
+        <file alias="flight.svg">icons/flight.svg</file>
+        <file alias="flights_and_hotels.svg">icons/flights_and_hotels.svg</file>
+        <file alias="food_bank.svg">icons/food_bank.svg</file>
+        <file alias="home.svg">icons/home.svg</file>
+        <file alias="hotel.svg">icons/hotel.svg</file>
+        <file alias="menu.svg">icons/menu.svg</file>
+        <file alias="search.svg">icons/search.svg</file>
+        <file alias="share.svg">icons/share.svg</file>
+        <file alias="transportation.svg">icons/transportation.svg</file>
+        <file alias="more_horiz.svg">icons/more_horiz.svg</file>
+        <file alias="delete.svg">icons/delete.svg</file>
+        <file alias="delete_forever.svg">icons/delete_forever.svg</file>
+        <file alias="edit.svg">icons/edit.svg</file>
+        <file alias="remove.svg">icons/remove.svg</file>
+        <file alias="check.svg">icons/check.svg</file>
+        <file alias="group.svg">icons/group.svg</file>
+        <file alias="group_add.svg">icons/group_add.svg</file>
+        <file alias="block.svg">icons/block.svg</file>
+        <file alias="arrow_right_alt.svg">icons/arrow_right_alt.svg</file>
+        <file alias="file_open.svg">icons/file_open.svg</file>
+        <file alias="folder_open.svg">icons/folder_open.svg</file>
+        <file alias="open_in_new.svg">icons/open_in_new.svg</file>
+        <file alias="open_in_new_down.svg">icons/open_in_new_down.svg</file>
+        <file alias="sort.svg">icons/sort.svg</file>
+        <file alias="sort_by_alpha.svg">icons/sort_by_alpha.svg</file>
+        <file alias="computer.svg">icons/computer.svg</file>
+        <file alias="contrast.svg">icons/contrast.svg</file>
+        <file alias="dark_mode.svg">icons/dark_mode.svg</file>
+        <file alias="light_mode.svg">icons/light_mode.svg</file>
+        <file alias="refresh.svg">icons/refresh.svg</file>
     </qresource>
 </RCC>
