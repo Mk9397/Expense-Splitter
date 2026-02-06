@@ -13,35 +13,74 @@ Dialog {
 
     signal tripCreated(string tripName)
 
+    function confirm() {
+        if (nameField.text.trim() !== "") {
+            root.tripCreated(nameField.text)
+            nameField.clear()
+            root.close()
+        }
+    }
+
+    function cancel() {
+        nameField.clear()
+        root.close()
+    }
+
     Overlay.modal: Rectangle {
         color: Material.dropShadowColor
     }
 
-    ColumnLayout {
-        width: parent.width
-        spacing: 16
+    onOpened: nameField.forceActiveFocus()
 
-        TextField {
-            id: tripNameField
-            Layout.fillWidth: true
-            placeholderText: "Group name"
-            font.pixelSize: 15
-        }
+    contentItem: Item {
+        implicitWidth: contentLayout.implicitWidth
+        implicitHeight: contentLayout.implicitHeight
 
-        Button {
-            text: "Create Group"
-            Layout.fillWidth: true
-            Layout.preferredHeight: 48
-            font.weight: Font.DemiBold
-            highlighted: true
-            onClicked: {
-                if (tripNameField.text.trim() !== "") {
-                    root.tripCreated(tripNameField.text)
-                    tripNameField.clear()
-                    root.close()
+        Keys.onEscapePressed: root.cancel()
+        Keys.onReturnPressed: root.confirm()
+
+        ColumnLayout {
+            id: contentLayout
+            width: parent.width
+            spacing: 16
+
+            TextField {
+                id: nameField
+                Layout.fillWidth: true
+                placeholderText: "Group name"
+                font.pixelSize: 15
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
+
+                Button {
+                    text: "Cancel"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 48
+                    flat: true
+                    onClicked: root.cancel()
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                }
+
+                Button {
+                    text: "Create Group"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 48
+                    font.weight: Font.DemiBold
+                    highlighted: true
+                    enabled: nameField.text.trim().length > 0
+                    onClicked: root.confirm()
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
                 }
             }
-            Component.onCompleted: pointerCursor.createObject(this)
         }
     }
 }

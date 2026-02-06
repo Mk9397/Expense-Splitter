@@ -25,119 +25,195 @@ Dialog {
 
     signal expenseEdited(string expenseId, string expenseTitle, real expenseAmount, string paidById, string splitType, var excludedIds)
 
+    function confirm() {
+        if (titleField.text.trim() === "" || amountField.text.trim() === "") {
+            return
+        }
+
+        root.expenseEdited(expenseId, titleField.text.trim(),
+                           parseFloat(amountField.text) || 0.00,
+                           paidByField.currentValue,
+                           splitTypeField.currentValue, root.excludedIds)
+
+        root.close()
+    }
+
+    function cancel() {
+        root.close()
+    }
+
     Overlay.modal: Rectangle {
         color: Material.dropShadowColor
     }
 
-    ColumnLayout {
-        width: parent.width
-        spacing: 12
+    onOpened: {
+        titleField.text = expenseTitle
+        amountField.text = expenseAmount.toString()
+        paidByField.currentIndex = participantModel.indexOfId(paidById)
+        splitTypeField.currentIndex = splitTypeField.model.indexOf(splitType)
+        root.excludedIds = excludedIds.slice()
 
-        TextField {
-            id: titleField
-            Layout.fillWidth: true
-            implicitHeight: 50
-            placeholderText: "Expense title"
-            font.pixelSize: 15
-        }
+        titleField.forceActiveFocus()
+    }
 
-        TextField {
-            id: amountField
-            Layout.fillWidth: true
-            implicitHeight: 50
-            placeholderText: "Amount (₦)"
-            inputMethodHints: Qt.ImhDigitsOnly
-            font.pixelSize: 15
-        }
+    contentItem: Item {
+        implicitWidth: contentLayout.implicitWidth
+        implicitHeight: contentLayout.implicitHeight
 
-        ColumnLayout {
-            spacing: 4
-            Label {
-                text: "Paid by"
-                font.pixelSize: 12
-                font.weight: paidByField.activeFocus ? Font.Medium : Font.Normal
-                color: paidByField.activeFocus ? Material.accent : Material.foreground
-                opacity: paidByField.activeFocus ? 1 : 0.47
-                leftPadding: 10
-            }
-            ComboBox {
-                id: paidByField
-                implicitHeight: 50
-
-                model: participantModel
-                textRole: "name"
-                valueRole: "id"
+        Keys.onEscapePressed: root.cancel()
+        Keys.onReturnPressed: {
+            if (saveButton.activeFocus || titleField.activeFocus
+                    || amountField.activeFocus || paidByField.activeFocus
+                    || splitTypeField.activeFocus) {
+                root.confirm()
             }
         }
 
         ColumnLayout {
-            spacing: 4
-            Label {
-                text: "Split type"
-                font.pixelSize: 12
-                font.weight: splitTypeField.activeFocus ? Font.Medium : Font.Normal
-                color: splitTypeField.activeFocus ? Material.accent : Material.foreground
-                opacity: splitTypeField.activeFocus ? 1 : 0.47
-                leftPadding: 10
-            }
-            ComboBox {
-                id: splitTypeField
-                implicitHeight: 50
-                model: ["equal", "personal"]
-            }
-        }
-
-        Button {
-            id: excludeBtn
-            text: "Manage excluded participants"
-                  + (excludedIds.length > 0 ? " (" + excludedIds.length + ")" : "")
-            flat: true
-            icon.source: "qrc:/icons/block.svg"
-            icon.color: Material.color(Material.Red)
-            onClicked: {
-                excludePopup.selectedIds = root.excludedIds.slice()
-                excludePopup.open()
-            }
-
-            background: Rectangle {
-                color: ThemeManager.cardBackground
-                radius: 12
-                border.color: ThemeManager.cardBorder
-                border.width: 1
-            }
-            Component.onCompleted: pointerCursor.createObject(this)
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
+            id: contentLayout
+            width: parent.width
             spacing: 12
 
-            Button {
-                text: "Cancel"
+            TextField {
+                id: titleField
                 Layout.fillWidth: true
-                Layout.preferredHeight: 48
-                flat: true
-                onClicked: root.close()
-                Component.onCompleted: pointerCursor.createObject(this)
+                implicitHeight: 50
+                placeholderText: "Expense title"
+                font.pixelSize: 15
+
+                KeyNavigation.tab: amountField
+                KeyNavigation.backtab: saveButton
+            }
+
+            TextField {
+                id: amountField
+                Layout.fillWidth: true
+                implicitHeight: 50
+                placeholderText: "Amount (₦)"
+                font.pixelSize: 15
+
+                inputMethodHints: Qt.ImhDigitsOnly
+                validator: DoubleValidator {
+                    bottom: 0.00
+                    decimals: 2
+                    notation: DoubleValidator.StandardNotation
+                }
+
+                KeyNavigation.tab: paidByField
+                KeyNavigation.backtab: titleField
+            }
+
+            ColumnLayout {
+                spacing: 4
+                Label {
+                    text: "Paid by"
+                    font.pixelSize: 12
+                    font.weight: paidByField.activeFocus ? Font.Medium : Font.Normal
+                    color: paidByField.activeFocus ? Material.accent : Material.foreground
+                    opacity: paidByField.activeFocus ? 1 : 0.47
+                    leftPadding: 10
+                }
+                ComboBox {
+                    id: paidByField
+                    implicitHeight: 50
+
+                    model: participantModel
+                    textRole: "name"
+                    valueRole: "id"
+
+                    KeyNavigation.tab: splitTypeField
+                    KeyNavigation.backtab: amountField
+                }
+            }
+
+            ColumnLayout {
+                spacing: 4
+                Label {
+                    text: "Split type"
+                    font.pixelSize: 12
+                    font.weight: splitTypeField.activeFocus ? Font.Medium : Font.Normal
+                    color: splitTypeField.activeFocus ? Material.accent : Material.foreground
+                    opacity: splitTypeField.activeFocus ? 1 : 0.47
+                    leftPadding: 10
+                }
+                ComboBox {
+                    id: splitTypeField
+                    implicitHeight: 50
+                    model: ["equal", "personal"]
+
+                    KeyNavigation.tab: excludeBtn.visible ? excludeBtn : cancelButton
+                    KeyNavigation.backtab: paidByField
+                }
             }
 
             Button {
-                text: "Save"
-                Layout.fillWidth: true
-                Layout.preferredHeight: 48
-                highlighted: true
+                id: excludeBtn
+                visible: splitTypeField.currentValue !== "personal"
+                text: "Manage excluded participants"
+                      + (excludedIds.length > 0 ? " (" + excludedIds.length + ")" : "")
+                flat: true
+                icon.source: "qrc:/icons/block.svg"
+                icon.color: Material.color(Material.Red)
+
                 onClicked: {
-                    if (titleField.text.trim() !== "" && amountField.text.trim(
-                                ) !== "") {
-                        root.expenseEdited(expenseId, titleField.text,
-                                           parseFloat(amountField.text)
-                                           || 0.00, paidByField.currentValue,
-                                           splitTypeField.currentValue,
-                                           root.excludedIds)
-                        root.close()
-                    }
+                    excludePopup.selectedIds = root.excludedIds.slice()
+                    excludePopup.open()
                 }
-                Component.onCompleted: pointerCursor.createObject(this)
+
+                background: Rectangle {
+                    color: ThemeManager.cardBackground
+                    radius: 12
+                    border.color: ThemeManager.cardBorder
+                    border.width: 1
+                }
+
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
+
+                KeyNavigation.tab: cancelButton
+                KeyNavigation.backtab: splitTypeField
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
+
+                Button {
+                    id: cancelButton
+                    text: "Cancel"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 48
+                    flat: true
+
+                    onClicked: root.cancel()
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
+
+                    KeyNavigation.tab: saveButton
+                    KeyNavigation.backtab: excludeBtn.visible ? excludeBtn : splitTypeField
+                }
+
+                Button {
+                    id: saveButton
+                    text: "Save"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 48
+                    highlighted: true
+                    enabled: titleField.text.trim().length > 0
+                             && amountField.text.trim().length > 0
+
+                    onClicked: root.confirm()
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
+
+                    KeyNavigation.tab: titleField
+                    KeyNavigation.backtab: cancelButton
+                }
             }
         }
     }
@@ -145,19 +221,13 @@ Dialog {
     ParticipantMultiSelectPopup {
         id: excludePopup
         width: root.width * 0.85
-        height: participantModel ? Math.min(participantModel.rowCount(
-                                                ) * 50 + 40, 300) : 200
+        height: participantModel ? Math.min(Math.max(participantModel.rowCount(
+                                                         ) * 50 + 40, 250),
+                                            300) : 200
         participantModel: root.participantModel
+
         onAccepted: function (ids) {
             root.excludedIds = ids
         }
-    }
-
-    onOpened: {
-        titleField.text = expenseTitle
-        amountField.text = expenseAmount
-        paidByField.currentIndex = participantModel.indexOfId(paidById)
-        splitTypeField.currentIndex = splitTypeField.model.indexOf(splitType)
-        excludedIds = excludedIds.slice()
     }
 }
