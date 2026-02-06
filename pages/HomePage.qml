@@ -309,11 +309,17 @@ Page {
         }
     }
 
-    DeleteTripDialog {
+    ConfirmationDialog {
         id: deleteTripDialog
-        onTripDeleted: function (tripId) {
-            tripManager.deleteTrip(tripId)
-        }
+        property string tripId: ""
+        property string tripName: ""
+
+        title: "Delete Group"
+        message: "Are you sure you want to delete \"" + tripName + "\"?"
+        warningText: "This action cannot be undone."
+        confirmText: "Delete"
+        confirmColor: Material.color(Material.Red)
+        onConfirmed: tripManager.deleteTrip(tripId)
     }
 
     EditTripDialog {

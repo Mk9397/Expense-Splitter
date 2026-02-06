@@ -538,11 +538,17 @@ Page {
         }
     }
 
-    DeleteTripDialog {
+    ConfirmationDialog {
         id: deleteTripDialog
-        tripId: root.tripId
+        property string tripId: ""
+        property string tripName: ""
 
-        onTripDeleted: function (tripId) {
+        title: "Delete Group"
+        message: "Are you sure you want to delete \"" + tripName + "\"?"
+        warningText: "This action cannot be undone."
+        confirmText: "Delete"
+        confirmColor: Material.color(Material.Red)
+        onConfirmed: {
             root.StackView.view.pop()
             tripManager.deleteTrip(tripId)
         }
@@ -564,11 +570,17 @@ Page {
         }
     }
 
-    DeleteExpenseDialog {
+    ConfirmationDialog {
         id: deleteExpenseDialog
-        onExpenseDeleted: function (expenseId) {
-            tripManager.deleteExpense(expenseId)
-        }
+        property string expenseId: ""
+        property string expenseTitle: ""
+
+        title: "Delete Expense"
+        message: "Are you sure you want to delete \"" + expenseTitle + "\" from this group?"
+        warningText: "This action cannot be undone."
+        confirmText: "Delete"
+        confirmColor: Material.color(Material.Red)
+        onConfirmed: tripManager.deleteExpense(expenseId)
     }
 
     AddParticipantDialog {
@@ -578,17 +590,16 @@ Page {
         }
     }
 
-    DeleteParticipantDialog {
+    ConfirmationDialog {
         id: deleteParticipantDialog
-        onParticipantDeleted: function (participantId) {
-            tripManager.deleteParticipant(participantId)
-        }
-    }
+        property string participantId: ""
+        property string participantName: ""
 
-    Component {
-        id: pointerCursor
-        HoverHandler {
-            cursorShape: Qt.PointingHandCursor
-        }
+        title: "Remove Participant"
+        message: "Are you sure you want to remove \"" + participantName + "\" from this group?"
+        warningText: "This action cannot be undone."
+        confirmText: "Remove"
+        confirmColor: Material.color(Material.Red)
+        onConfirmed: tripManager.deleteParticipant(participantId)
     }
 }
