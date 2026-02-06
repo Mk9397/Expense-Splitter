@@ -1,0 +1,5 @@
+module popups
+
+ToastPopup 1.0 ToastPopup.qml
+ParticipantMultiSelectPopup 1.0 ParticipantMultiSelectPopup.qml
+ParticipantListPopup 1.0 ParticipantListPopup.qml
