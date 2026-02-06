@@ -5,59 +5,94 @@ from PySide6.QtCore import (
     Qt,
     Slot,
 )
+from PySide6.QtSql import QSqlQuery, QSqlQueryModel, QSqlTableModel
+import uuid
 
 
-class TripModel(QAbstractListModel):
+class TripSqlModel(QSqlQueryModel):
     IdRole = Qt.UserRole + 1
     NameRole = Qt.UserRole + 2
-    ParticipantCountRole = Qt.UserRole + 3
-    ParticipantsRole = Qt.UserRole + 4
-    CurrencyRole = Qt.UserRole + 5
-    CreatedAtRole = Qt.UserRole + 6
-    UpdatedAtRole = Qt.UserRole + 7
+    CurrencyRole = Qt.UserRole + 3
+    CreatedAtRole = Qt.UserRole + 4
+    UpdatedAtRole = Qt.UserRole + 5
+    ParticipantCountRole = Qt.UserRole + 6
+    ParticipantsRole = Qt.UserRole + 7
 
-    def __init__(self, trips_list, parent=None):
+    def __init__(self, db, parent=None):
         super().__init__(parent)
-        self._trips = trips_list
-
-    def rowCount(self, parent=QModelIndex()):
-        return len(self._trips)
-
-    def data(self, index, role=Qt.DisplayRole):
-        if not index.isValid() or not (0 <= index.row() < len(self._trips)):
-            return None
-
-        trip = self._trips[index.row()]
-        if role == self.IdRole:
-            return trip["id"]
-        if role == self.NameRole:
-            return trip["name"]
-        if role == self.ParticipantCountRole:
-            return len(trip.get("participants", []))
-        if role == self.ParticipantsRole:
-            return trip.get("participants", [])
-        if role == self.CurrencyRole:
-            return trip["currency"]
-        if role == self.CreatedAtRole:
-            return trip["created_at"]
-        if role == self.UpdatedAtRole:
-            return trip["updated_at"]
-        return None
+        self.db = db
+        self._participants_cache = {}
+        self.select()
 
     def roleNames(self):
         return {
             self.IdRole: b"id",
             self.NameRole: b"name",
-            self.ParticipantCountRole: b"participant_count",
-            self.ParticipantsRole: b"participants",
             self.CurrencyRole: b"currency",
             self.CreatedAtRole: b"created_at",
             self.UpdatedAtRole: b"updated_at",
+            self.ParticipantCountRole: b"participant_count",
+            self.ParticipantsRole: b"participants",
         }
 
-    def refresh(self):
-        self.beginResetModel()
-        self.endResetModel()
+    def data(self, index, role=Qt.DisplayRole):
+        if role == self.ParticipantsRole:
+            # Get trip ID from the row
+            trip_id = super().data(self.index(index.row(), 0))
+            return self._participants_cache.get(trip_id, [])
+
+        if role >= Qt.UserRole:
+            column_map = {
+                self.IdRole: 0,
+                self.NameRole: 1,
+                self.CurrencyRole: 2,
+                self.CreatedAtRole: 3,
+                self.UpdatedAtRole: 4,
+                self.ParticipantCountRole: 5,
+            }
+            return super().data(self.index(index.row(), column_map[role]))
+        return super().data(index, role)
+
+    def select(self):
+        """Load trips with participant counts"""
+        query = QSqlQuery(self.db)
+        query.exec(
+            """
+            SELECT 
+                t.id,
+                t.name,
+                t.currency,
+                t.created_at,
+                t.updated_at,
+                COALESCE(COUNT(p.id), 0) as participant_count
+            FROM trips t
+            LEFT JOIN participants p ON t.id = p.trip_id
+            GROUP BY t.id
+            ORDER BY t.updated_at DESC
+            """
+        )
+        self.setQuery(query)
+
+        # Load all participants for all trips
+        self._load_all_participants()
+
+    def _load_all_participants(self):
+        """Load participants for all trips into cache"""
+        self._participants_cache.clear()
+
+        query = QSqlQuery(self.db)
+        query.exec("SELECT id, trip_id, name FROM participants ORDER BY trip_id")
+
+        while query.next():
+            trip_id = query.value(1)
+            participant = {
+                "id": query.value(0),
+                "name": query.value(2),
+            }
+
+            if trip_id not in self._participants_cache:
+                self._participants_cache[trip_id] = []
+            self._participants_cache[trip_id].append(participant)
 
 
 class TripFilterProxy(QSortFilterProxyModel):
@@ -66,84 +101,54 @@ class TripFilterProxy(QSortFilterProxyModel):
         self.setDynamicSortFilter(True)
 
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.setFilterRole(TripModel.NameRole)
+        self.setFilterRole(TripSqlModel.NameRole)
 
-        self.setSortRole(TripModel.UpdatedAtRole)
+        self.setSortRole(TripSqlModel.UpdatedAtRole)
         self.sort(0, Qt.DescendingOrder)
 
     @Slot()
     def sortByNameAsc(self):
-        self.setSortRole(TripModel.NameRole)
+        self.setSortRole(TripSqlModel.NameRole)
         self.sort(0, Qt.AscendingOrder)
 
     @Slot()
     def sortByNameDesc(self):
-        self.setSortRole(TripModel.NameRole)
+        self.setSortRole(TripSqlModel.NameRole)
         self.sort(0, Qt.DescendingOrder)
 
     @Slot()
     def sortByUpdatedDesc(self):
-        self.setSortRole(TripModel.UpdatedAtRole)
+        self.setSortRole(TripSqlModel.UpdatedAtRole)
         self.sort(0, Qt.DescendingOrder)
 
     @Slot()
     def sortByUpdatedAsc(self):
-        self.setSortRole(TripModel.UpdatedAtRole)
+        self.setSortRole(TripSqlModel.UpdatedAtRole)
         self.sort(0, Qt.AscendingOrder)
 
     @Slot()
     def sortByCreatedDesc(self):
-        self.setSortRole(TripModel.CreatedAtRole)
+        self.setSortRole(TripSqlModel.CreatedAtRole)
         self.sort(0, Qt.DescendingOrder)
 
     @Slot()
     def sortByCreatedAsc(self):
-        self.setSortRole(TripModel.CreatedAtRole)
+        self.setSortRole(TripSqlModel.CreatedAtRole)
         self.sort(0, Qt.AscendingOrder)
 
 
-class ExpenseModel(QAbstractListModel):
+class ExpenseSqlModel(QSqlQueryModel):
     IdRole = Qt.UserRole + 1
     TitleRole = Qt.UserRole + 2
     AmountRole = Qt.UserRole + 3
     PaidByRole = Qt.UserRole + 4
     SplitTypeRole = Qt.UserRole + 5
-    ExcludedRole = Qt.UserRole + 6
-    CreatedAtRole = Qt.UserRole + 7
+    CreatedAtRole = Qt.UserRole + 6
+    ExcludedRole = Qt.UserRole + 7
 
-    def __init__(self, parent=None):
+    def __init__(self, db, parent=None):
         super().__init__(parent)
-        self._expenses = []
-
-    def setExpenses(self, expenses):
-        """Update the expense list"""
-        self.beginResetModel()
-        self._expenses = expenses
-        self.endResetModel()
-
-    def rowCount(self, parent=QModelIndex()):
-        return len(self._expenses)
-
-    def data(self, index, role=Qt.DisplayRole):
-        if not index.isValid() or not (0 <= index.row() < len(self._expenses)):
-            return None
-
-        expense = self._expenses[index.row()]
-        if role == self.IdRole:
-            return expense["id"]
-        if role == self.TitleRole:
-            return expense["title"]
-        if role == self.AmountRole:
-            return expense["amount"]
-        if role == self.PaidByRole:
-            return expense["paid_by"]
-        if role == self.SplitTypeRole:
-            return expense["split_type"]
-        if role == self.ExcludedRole:
-            return expense["excluded"]
-        if role == self.CreatedAtRole:
-            return expense.get("created_at", "")
-        return None
+        self.db = db
 
     def roleNames(self):
         return {
@@ -152,38 +157,63 @@ class ExpenseModel(QAbstractListModel):
             self.AmountRole: b"amount",
             self.PaidByRole: b"paid_by",
             self.SplitTypeRole: b"split_type",
-            self.ExcludedRole: b"excluded",
             self.CreatedAtRole: b"created_at",
+            self.ExcludedRole: b"excluded",
         }
 
+    def data(self, index, role):
+        if role == self.ExcludedRole:
+            csv = super().data(self.index(index.row(), 6))
+            if csv:
+                return [pid.strip() for pid in csv.split(",") if pid.strip()]
+            return []
 
-class ParticipantModel(QAbstractListModel):
+        if role >= Qt.UserRole:
+            column_map = {
+                self.IdRole: 0,
+                self.TitleRole: 1,
+                self.AmountRole: 2,
+                self.PaidByRole: 3,
+                self.SplitTypeRole: 4,
+                self.CreatedAtRole: 5,
+            }
+            return super().data(self.index(index.row(), column_map[role]))
+        return super().data(index, role)
+
+    def setTrip(self, trip_id):
+        query = QSqlQuery(self.db)
+        query.prepare(
+            """
+            SELECT 
+                e.id, 
+                e.title, 
+                e.amount, 
+                e.paid_by, 
+                e.split_type, 
+                e.created_at,
+                COALESCE(
+                    (SELECT GROUP_CONCAT(ee.participant_id, ',')
+                    FROM expense_excluded ee 
+                    WHERE ee.expense_id = e.id),
+                    ''
+                ) AS excluded_csv
+            FROM expenses e
+            WHERE trip_id = ?
+            ORDER BY e.created_at DESC
+        """
+        )
+        query.addBindValue(trip_id)
+        query.exec()
+        self.setQuery(query)
+
+
+class ParticipantSqlModel(QSqlQueryModel):
     IdRole = Qt.UserRole + 1
     NameRole = Qt.UserRole + 2
 
-    def __init__(self, parent=None):
+    def __init__(self, db, parent=None):
         super().__init__(parent)
-        self._participants = []
-
-    def setParticipants(self, participants):
-        """Update the participant list"""
-        self.beginResetModel()
-        self._participants = participants
-        self.endResetModel()
-
-    def rowCount(self, parent=QModelIndex()):
-        return len(self._participants)
-
-    def data(self, index, role=Qt.DisplayRole):
-        if not index.isValid() or not (0 <= index.row() < len(self._participants)):
-            return None
-
-        participant = self._participants[index.row()]
-        if role == self.IdRole:
-            return participant["id"]
-        if role == self.NameRole:
-            return participant["name"]
-        return None
+        self.db = db
 
     def roleNames(self):
         return {
@@ -191,30 +221,93 @@ class ParticipantModel(QAbstractListModel):
             self.NameRole: b"name",
         }
 
-    @Slot(int, result=dict)
-    def get(self, row):
-        """Returns dict with all roles for given row"""
-        if not (0 <= row < len(self._participants)):
-            return {}
+    def data(self, index, role):
+        if role >= Qt.UserRole:
+            column_map = {
+                self.IdRole: 0,
+                self.NameRole: 1,
+            }
+            return super().data(self.index(index.row(), column_map[role]))
+        return super().data(index, role)
 
-        participant = self._participants[row]
-        return {"id": participant["id"], "name": participant["name"]}
+    def setTrip(self, trip_id):
+        query = QSqlQuery(self.db)
+        query.prepare(
+            """
+            SELECT id, name
+            FROM participants
+            WHERE trip_id = ?
+        """
+        )
+        query.addBindValue(trip_id)
+        query.exec()
+        self.setQuery(query)
 
     @Slot(str, result=int)
     def indexOfId(self, participant_id: str):
-        """Returns the index of the participant with the given ID, or -1 if not found"""
-        for row, participant in enumerate(self._participants):
-            if participant["id"] == participant_id:
+        for row in range(self.rowCount()):
+            if self.data(self.index(row, 0), self.IdRole) == participant_id:
                 return row
         return -1
 
     @Slot(str, result=str)
     def nameOfId(self, participant_id: str):
-        """Returns the name of the participant with the given ID, or empty string if not found"""
-        for participant in self._participants:
-            if participant["id"] == participant_id:
-                return participant["name"]
-        return ""
+        query = QSqlQuery(self.db)
+        query.prepare("SELECT name FROM participants WHERE id = ?")
+        query.addBindValue(participant_id)
+        query.exec()
+        return query.next() and query.value(0) or ""
+
+
+class ParticipantTableModel(QSqlTableModel):
+    IdRole = Qt.UserRole + 1
+    NameRole = Qt.UserRole + 2
+
+    def __init__(self, db, parent=None):
+        super().__init__(parent, db)
+        self.setTable("participants")
+        self.setEditStrategy(QSqlTableModel.OnManualSubmit)
+
+    def roleNames(self):
+        return {
+            self.IdRole: b"id",
+            self.NameRole: b"name",
+        }
+
+    def data(self, index, role):
+        if role >= Qt.UserRole:
+            column_map = {
+                self.IdRole: self.fieldIndex("id"),
+                self.NameRole: self.fieldIndex("name"),
+            }
+            return super().data(self.index(index.row(), column_map[role]))
+        return super().data(index, role)
+
+    @Slot(str)
+    def setTrip(self, trip_id: str):
+        self.setFilter(f"trip_id = '{trip_id}'")
+        self.select()
+
+    @Slot(str, result=str)
+    def addParticipant(self, name: str) -> str:
+        """Add new participant to current trip"""
+        participant_id = str(uuid.uuid4())
+        record = self.record()
+        record.setValue("id", participant_id)
+        record.setValue("name", name)
+        # trip_id will be set by filter
+        self.insertRecord(-1, record)
+        return participant_id
+
+    @Slot(result=bool)
+    def submitAll(self) -> bool:
+        """Commit all pending changes"""
+        return super().submitAll()
+
+    @Slot()
+    def revertAll(self):
+        """Discard all pending changes"""
+        super().revertAll()
 
 
 class SettlementModel(QAbstractListModel):
