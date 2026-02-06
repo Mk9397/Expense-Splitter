@@ -13,7 +13,8 @@ ApplicationWindow {
     minimumWidth: 300
     minimumHeight: 500
 
-    // maximumWidth: 500
+    maximumWidth: 500
+
     title: "Expense Splitter"
 
     property int themeMode: Material.System
@@ -36,6 +37,13 @@ ApplicationWindow {
             themeMode = Material.System
         }
         ThemeManager.theme = themeMode
+
+        let lastTripId = settingsManager.lastTripId
+        if (settingsManager.openLastTrip && lastTripId) {
+            stack.push("pages/TripPage.qml", {
+                           "tripId": lastTripId
+                       })
+        }
     }
 
     // Listen for theme changes from settings

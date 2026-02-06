@@ -36,61 +36,14 @@ Page {
             ToolButton {
                 id: settingsButton
                 icon.source: "qrc:/icons/settings.svg"
-                onClicked: settingsMenu.open()
-                Component.onCompleted: pointerCursor.createObject(this)
-            }
 
-            Menu {
-                id: settingsMenu
-                width: 260
-                x: parent.width
-                y: parent.height
-
-                Label {
-                    text: "Global Currency"
-                    font.pixelSize: 12
-                    opacity: 0.6
-                    leftPadding: 16
-                    topPadding: 8
-                    bottomPadding: 4
+                onClicked: {
+                    var stack = root.StackView.view
+                    stack.push("SettingsPage.qml")
                 }
 
-                MenuItem {
-                    contentItem: CurrencyComboBox {
-                        id: globalCurrencyCombo
-                        currentCode: settingsManager ? settingsManager.currency : "NGN"
-                        onActivated: settingsManager.setCurrency(
-                                         globalCurrencyCombo.model[globalCurrencyCombo.currentIndex].code)
-                    }
-                }
-
-                MenuSeparator {}
-                Label {
-                    text: "Theme"
-                    font.pixelSize: 12
-                    opacity: 0.6
-                    leftPadding: 16
-                    topPadding: 8
-                    bottomPadding: 4
-                }
-
-                MenuItem {
-                    text: "System Theme"
-                    checkable: true
-                    checked: settingsManager ? settingsManager.theme === "system" : false
-                    onTriggered: settingsManager.setTheme("system")
-                }
-                MenuItem {
-                    text: "Light Theme"
-                    checkable: true
-                    checked: settingsManager ? settingsManager.theme === "light" : false
-                    onTriggered: settingsManager.setTheme("light")
-                }
-                MenuItem {
-                    text: "Dark Theme"
-                    checkable: true
-                    checked: settingsManager ? settingsManager.theme === "dark" : false
-                    onTriggered: settingsManager.setTheme("dark")
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
                 }
             }
         }
@@ -118,7 +71,7 @@ Page {
                 Layout.topMargin: 4
             }
             ToolButton {
-                icon.source: "qrc:/icons/menu.svg"
+                icon.source: "qrc:/icons/sort.svg"
                 onClicked: sortMenu.open()
                 Component.onCompleted: pointerCursor.createObject(this)
             }
