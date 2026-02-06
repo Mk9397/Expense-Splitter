@@ -26,11 +26,10 @@ ItemDelegate {
         radius: 12
         color: {
             if (control.hovered)
-                return Material.theme === Material.Dark ? Qt.rgba(
-                                                              1, 1, 1,
-                                                              0.08) : Material.color(
-                                                              Material.Grey,
-                                                              Material.Shade50)
+                return ThemeManager.isDark ? Qt.rgba(1, 1, 1,
+                                                     0.08) : Material.color(
+                                                 Material.Grey,
+                                                 Material.Shade50)
             return ThemeManager.cardBackground
         }
         border.color: ThemeManager.cardBorder
@@ -84,10 +83,9 @@ ItemDelegate {
                 Rectangle {
                     width: 1
                     height: 16
-                    color: Material.theme === Material.Dark ? Qt.rgba(
-                                                                  1, 1, 1,
-                                                                  0.1) : Qt.rgba(
-                                                                  0, 0, 0, 0.1)
+                    color: ThemeManager.isDark ? Qt.rgba(1, 1, 1,
+                                                         0.1) : Qt.rgba(0, 0,
+                                                                        0, 0.1)
                     Layout.alignment: Qt.AlignVCenter
                 }
 
@@ -115,10 +113,9 @@ ItemDelegate {
             Rectangle {
                 width: 1
                 height: 30
-                color: Material.theme === Material.Dark ? Qt.rgba(
-                                                              1, 1, 1,
-                                                              0.1) : Qt.rgba(
-                                                              0, 0, 0, 0.1)
+                color: ThemeManager.isDark ? Qt.rgba(1, 1, 1,
+                                                     0.1) : Qt.rgba(0,
+                                                                    0, 0, 0.1)
                 Layout.alignment: Qt.AlignVCenter
             }
 
@@ -181,7 +178,10 @@ ItemDelegate {
             icon.height: 20
             Layout.alignment: Qt.AlignVCenter
             onClicked: control.deleteParticipant()
-            Component.onCompleted: pointerCursor.createObject(this)
+
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
         }
     }
 }

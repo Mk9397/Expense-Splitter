@@ -84,16 +84,6 @@ ComboBox {
                     source: "qrc:/icons/check.svg"
                     sourceSize.width: 18
                     sourceSize.height: 18
-                    visible: false
-                }
-
-                MultiEffect {
-                    source: checkIcon
-                    anchors.fill: checkIcon
-
-                    colorization: 1.0
-                    colorizationColor: control.currentIndex
-                                       === index ? Material.accent : Material.foreground
 
                     visible: control.currentIndex === index
                     opacity: visible ? 1 : 0
@@ -103,12 +93,22 @@ ComboBox {
                             duration: 150
                         }
                     }
+
+                    layer.enabled: true
+                    layer.effect: MultiEffect {
+                        colorization: 1.0
+                        colorizationColor: control.currentIndex
+                                           === index ? Material.accent : Material.foreground
+                    }
                 }
             }
         }
 
         highlighted: control.highlightedIndex === index
-        Component.onCompleted: pointerCursor.createObject(this)
+
+        HoverHandler {
+            cursorShape: Qt.PointingHandCursor
+        }
     }
 
     // Closed combobox display
@@ -133,5 +133,7 @@ ComboBox {
         }
     }
 
-    Component.onCompleted: pointerCursor.createObject(this)
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
 }

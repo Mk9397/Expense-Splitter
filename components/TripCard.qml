@@ -26,11 +26,10 @@ ItemDelegate {
                             Material.Blue, Material.theme
                             === Material.Dark ? Material.Shade800 : Material.Shade100)
             if (control.hovered)
-                return Material.theme === Material.Dark ? Qt.rgba(
-                                                              1, 1, 1,
-                                                              0.08) : Material.color(
-                                                              Material.Grey,
-                                                              Material.Shade50)
+                return ThemeManager.isDark ? Qt.rgba(1, 1, 1,
+                                                     0.08) : Material.color(
+                                                 Material.Grey,
+                                                 Material.Shade50)
             return ThemeManager.cardBackground
         }
         border.color: {
@@ -58,15 +57,13 @@ ItemDelegate {
             width: 52
             height: 52
             radius: 26
-            color: Material.theme === Material.Dark ? Qt.rgba(
-                                                          33 / 255, 150 / 255,
-                                                          243 / 255,
-                                                          0.2) : Material.color(
-                                                          Material.Blue,
-                                                          Material.Shade100)
+            color: ThemeManager.isDark ? Qt.rgba(33 / 255, 150 / 255,
+                                                 243 / 255,
+                                                 0.2) : Material.color(
+                                             Material.Blue, Material.Shade100)
             border.color: Material.color(
-                              Material.Blue, Material.theme
-                              === Material.Dark ? Material.Shade600 : Material.Shade300)
+                              Material.Blue,
+                              ThemeManager.isDark ? Material.Shade600 : Material.Shade300)
             border.width: 1.5
             Layout.alignment: Qt.AlignVCenter
 
@@ -107,7 +104,10 @@ ItemDelegate {
             Layout.alignment: Qt.AlignVCenter
 
             onClicked: moreMenu.popup()
-            Component.onCompleted: pointerCursor.createObject(this)
+
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
 
             Menu {
                 id: moreMenu
@@ -150,6 +150,12 @@ ItemDelegate {
             sourceSize.width: 25
             sourceSize.height: 25
             opacity: 0.3
+
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                colorization: 1.0
+                colorizationColor: Material.foreground
+            }
         }
     }
 
@@ -161,8 +167,10 @@ ItemDelegate {
             moreMenu.popup()
         }
         hoverEnabled: true
-        cursorShape: "PointingHandCursor"
+        cursorShape: Qt.PointingHandCursor
     }
 
-    Component.onCompleted: pointerCursor.createObject(this)
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
 }

@@ -42,8 +42,14 @@ Page {
 
             ToolButton {
                 icon.source: "qrc:/icons/chevron_left.svg"
-                onClicked: root.StackView.view.pop()
-                Component.onCompleted: pointerCursor.createObject(this)
+                onClicked: {
+                    root.StackView.view.pop()
+                    tripManager.setActiveTrip("")
+                }
+
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
 
             Label {
@@ -58,7 +64,10 @@ Page {
             ToolButton {
                 icon.source: 'qrc:/icons/more_vert.svg'
                 onClicked: tripOptionsMenu.open()
-                Component.onCompleted: pointerCursor.createObject(this)
+
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
 
             Menu {
@@ -75,7 +84,9 @@ Page {
                         editTripDialog.tripCurrency = root.tripCurrency
                         editTripDialog.open()
                     }
-                    Component.onCompleted: pointerCursor.createObject(this)
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
                 }
                 MenuItem {
                     text: "Share Trip"
@@ -95,7 +106,10 @@ Page {
                                     -3).join('/')
                         shareToast.open()
                     }
-                    Component.onCompleted: pointerCursor.createObject(this)
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
                 }
 
                 MenuSeparator {}
@@ -104,10 +118,14 @@ Page {
                     icon.source: "qrc:/icons/delete.svg"
                     icon.color: Material.color(Material.Red)
                     onTriggered: {
+                        deleteTripDialog.tripId = root.tripId
                         deleteTripDialog.tripName = root.tripName
                         deleteTripDialog.open()
                     }
-                    Component.onCompleted: pointerCursor.createObject(this)
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
                 }
             }
         }
@@ -240,19 +258,28 @@ Page {
                 text: "Expenses"
                 font.weight: Font.Medium
                 font.pixelSize: 14
-                Component.onCompleted: pointerCursor.createObject(this)
+
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
             TabButton {
                 text: "Participants"
                 font.weight: Font.Medium
                 font.pixelSize: 14
-                Component.onCompleted: pointerCursor.createObject(this)
+
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
             TabButton {
                 text: "Balances"
                 font.weight: Font.Medium
                 font.pixelSize: 14
-                Component.onCompleted: pointerCursor.createObject(this)
+
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
         }
 
@@ -291,11 +318,11 @@ Page {
                         width: 56
                         height: 22
                         radius: 11
-                        color: Material.theme === Material.Dark ? Qt.rgba(
-                                                                      1, 1, 1,
-                                                                      0.1) : Material.color(
-                                                                      Material.Grey,
-                                                                      Material.Shade200)
+                        color: ThemeManager.isDark ? Qt.rgba(
+                                                         1, 1, 1,
+                                                         0.1) : Material.color(
+                                                         Material.Grey,
+                                                         Material.Shade200)
 
                         Label {
                             anchors.centerIn: parent
@@ -316,17 +343,43 @@ Page {
                     spacing: 10
                     clip: true
 
+                    // Empty State
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        width: parent.width * 0.8
+                        visible: expenseList.count === 0
+
+                        Label {
+                            text: "No Expenses Yet"
+                            font.pixelSize: 22
+                            font.weight: Font.DemiBold
+                            Layout.alignment: Qt.AlignHCenter
+                            opacity: 0.87
+                        }
+                        Label {
+                            text: "Add one to get started!"
+                            font.pixelSize: 14
+                            Layout.alignment: Qt.AlignHCenter
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            opacity: 0.6
+                        }
+                    }
+
                     model: tripManager ? tripManager.expenseModel : null
 
                     delegate: ExpenseCard {
                         width: ListView.view.width
+
                         expenseTitle: title
                         expenseAmount: amount
                         expenseIcon: "💵"
                         paidBy: participantModel ? participantModel.nameOfId(
                                                        paid_by) : "Participant ID: " + paid_by
                         splitType: split_type
-                        excludedIds: excluded
+                        excludedIds: excluded ?? []
+
                         tripCurrencySymbol: root.currencySymbol
                         participantCount: root.participantCount
                         onEditExpense: {
@@ -361,7 +414,10 @@ Page {
                         addExpenseDialog.participantModel = root.participantModel
                         addExpenseDialog.open()
                     }
-                    Component.onCompleted: pointerCursor.createObject(this)
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
                 }
             }
 
@@ -392,11 +448,11 @@ Page {
                         width: 84
                         height: 22
                         radius: 11
-                        color: Material.theme === Material.Dark ? Qt.rgba(
-                                                                      1, 1, 1,
-                                                                      0.1) : Material.color(
-                                                                      Material.Grey,
-                                                                      Material.Shade200)
+                        color: ThemeManager.isDark ? Qt.rgba(
+                                                         1, 1, 1,
+                                                         0.1) : Material.color(
+                                                         Material.Grey,
+                                                         Material.Shade200)
 
                         Label {
                             anchors.centerIn: parent
@@ -453,7 +509,10 @@ Page {
                     Material.elevation: 3
                     highlighted: true
                     onClicked: addParticipantDialog.open()
-                    Component.onCompleted: pointerCursor.createObject(this)
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
                 }
             }
 
@@ -484,11 +543,11 @@ Page {
                         width: 56
                         height: 22
                         radius: 11
-                        color: Material.theme === Material.Dark ? Qt.rgba(
-                                                                      1, 1, 1,
-                                                                      0.1) : Material.color(
-                                                                      Material.Grey,
-                                                                      Material.Shade200)
+                        color: ThemeManager.isDark ? Qt.rgba(
+                                                         1, 1, 1,
+                                                         0.1) : Material.color(
+                                                         Material.Grey,
+                                                         Material.Shade200)
 
                         Label {
                             anchors.centerIn: parent

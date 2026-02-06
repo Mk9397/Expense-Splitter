@@ -41,7 +41,7 @@ Popup {
             model: control.participantModel ?? null
 
             delegate: CheckDelegate {
-                width: parent.width
+                width: ListView.view.width
                 text: name
                 checked: control.selectedIds.includes(model.id)
 
@@ -66,7 +66,9 @@ Popup {
                 control.accepted(control.selectedIds)
                 control.close()
             }
-            Component.onCompleted: pointerCursor.createObject(this)
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
         }
     }
 }

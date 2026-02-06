@@ -11,7 +11,7 @@ ItemDelegate {
     implicitHeight: 82
 
     property string expenseTitle: ""
-    property int expenseAmount: 0
+    property real expenseAmount: 0
     property string expenseIcon: ""
     property string paidBy: ""
     property string splitType: "equal"
@@ -34,13 +34,12 @@ ItemDelegate {
             if (control.pressed)
                 return Material.color(
                             Material.Blue,
-                            Material.theme === Material.Dark ? Material.Shade800 : Material.Shade50)
+                            ThemeManager.isDark ? Material.Shade800 : Material.Shade50)
             if (control.hovered)
-                return Material.theme === Material.Dark ? Qt.rgba(
-                                                              1, 1, 1,
-                                                              0.08) : Material.color(
-                                                              Material.Grey,
-                                                              Material.Shade50)
+                return ThemeManager.isDark ? Qt.rgba(1, 1, 1,
+                                                     0.08) : Material.color(
+                                                 Material.Grey,
+                                                 Material.Shade50)
             return ThemeManager.cardBackground
         }
         border.color: ThemeManager.cardBorder
@@ -64,11 +63,8 @@ ItemDelegate {
             width: 44
             height: 44
             radius: 22
-            color: Material.theme === Material.Dark ? Qt.rgba(
-                                                          1, 1, 1,
-                                                          0.1) : Material.color(
-                                                          Material.Grey,
-                                                          Material.Shade100)
+            color: ThemeManager.isDark ? Qt.rgba(1, 1, 1, 0.1) : Material.color(
+                                             Material.Grey, Material.Shade100)
             Layout.alignment: Qt.AlignVCenter
 
             Label {
@@ -125,10 +121,16 @@ ItemDelegate {
             icon.height: 20
             Layout.alignment: Qt.AlignVCenter
             onClicked: control.deleteExpense()
-            Component.onCompleted: pointerCursor.createObject(this)
+
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
         }
     }
 
     onClicked: control.editExpense()
-    Component.onCompleted: pointerCursor.createObject(this)
+
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
 }

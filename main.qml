@@ -20,12 +20,11 @@ ApplicationWindow {
 
     property int themeMode: Material.System
     Material.theme: themeMode
-    // Material.elevation: 2
     Material.accent: Material.Blue
     Material.primary: Material.Blue
 
-    // Material.foreground: Material.theme === Material.Dark ? "#e0e0e0" : "#212121"
-    // Material.background: Material.theme === Material.Dark ? "#121212" : "#ffffff"
+    // Material.foreground: ThemeManager.isDark ? "#e0e0e0" : "#212121"
+    // Material.background: ThemeManager.isDark ? "#121212" : "#ffffff"
 
     // Theme settings
     Component.onCompleted: {
@@ -67,13 +66,5 @@ ApplicationWindow {
         id: stack
         anchors.fill: parent
         initialItem: HomePage {}
-    }
-
-    // Global pointer cursor component
-    Component {
-        id: pointerCursor
-        HoverHandler {
-            cursorShape: Qt.PointingHandCursor
-        }
     }
 }

@@ -82,7 +82,10 @@ RowLayout {
                 Layout.alignment: Qt.AlignVCenter
 
                 onClicked: searchField.clear()
-                Component.onCompleted: pointerCursor.createObject(this)
+
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
 
                 Behavior on opacity {
                     NumberAnimation {

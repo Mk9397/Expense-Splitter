@@ -108,7 +108,10 @@ Popup {
                 text: "Dismiss"
                 flat: true
                 onClicked: control.close()
-                Component.onCompleted: pointerCursor.createObject(this)
+
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
 
             Button {
@@ -117,7 +120,9 @@ Popup {
                     fileActions.showInFolder(control.pdfPath)
                     control.close()
                 }
-                Component.onCompleted: pointerCursor.createObject(this)
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
 
             Button {
@@ -127,7 +132,9 @@ Popup {
                     fileActions.openFile(control.pdfPath)
                     control.close()
                 }
-                Component.onCompleted: pointerCursor.createObject(this)
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
         }
     }

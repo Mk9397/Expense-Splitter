@@ -51,8 +51,9 @@ Page {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 20
-        spacing: 16
+        anchors.margins: 24
+        anchors.bottomMargin: 0
+        spacing: 4
 
         // Search Bar
         SearchBar {
@@ -68,12 +69,14 @@ Page {
                 font.weight: Font.DemiBold
                 opacity: 0.87
                 Layout.fillWidth: true
-                Layout.topMargin: 4
+                // Layout.topMargin: 4
             }
             ToolButton {
                 icon.source: "qrc:/icons/sort.svg"
                 onClicked: sortMenu.open()
-                Component.onCompleted: pointerCursor.createObject(this)
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
 
             Menu {
@@ -188,6 +191,7 @@ Page {
                 spacing: 12
                 clip: true
                 visible: count > 0
+                bottomMargin: 20
 
                 // model: ListModel {}
                 model: tripManager ? tripManager.proxyModel : null
@@ -239,15 +243,64 @@ Page {
         }
 
         Button {
-            text: totalTrips === 0 ? "Create Your First Group" : "Add New Group"
+            text: "Create Your First Group"
+            visible: totalTrips === 0
+
             Layout.fillWidth: true
             Layout.preferredHeight: 52
+
             font.pixelSize: 15
             font.weight: Font.DemiBold
+
             Material.elevation: 3
             highlighted: true
+
             onClicked: addTripDialog.open()
-            Component.onCompleted: pointerCursor.createObject(this)
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
+        }
+    }
+
+    // Floating Action Button
+    RoundButton {
+        id: fab
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: 20
+        anchors.bottomMargin: 20
+
+        width: hovered ? implicitWidth + 32 : 56
+        height: 56
+        visible: totalTrips > 0
+
+        Behavior on width {
+            NumberAnimation {
+                duration: 200
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        text: hovered ? "Add New Group" : ""
+        icon.source: "qrc:/icons/add.svg"
+        icon.width: 24
+        icon.height: 24
+
+        font.pixelSize: 15
+        font.weight: Font.DemiBold
+
+        Material.elevation: hovered ? 8 : 6
+        Material.background: Material.accent
+
+        Behavior on Material.elevation {
+            NumberAnimation {
+                duration: 200
+            }
+        }
+
+        onClicked: addTripDialog.open()
+        HoverHandler {
+            cursorShape: Qt.PointingHandCursor
         }
     }
 
@@ -279,13 +332,6 @@ Page {
         id: editTripDialog
         onTripEdited: function (tripId, tripName, participants, tripCurrency) {
             tripManager.editTrip(tripId, tripName, participants, tripCurrency)
-        }
-    }
-
-    Component {
-        id: pointerCursor
-        HoverHandler {
-            cursorShape: Qt.PointingHandCursor
         }
     }
 }
