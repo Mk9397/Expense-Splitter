@@ -37,5 +37,8 @@
         <file alias="dark_mode.svg">icons/dark_mode.svg</file>
         <file alias="light_mode.svg">icons/light_mode.svg</file>
         <file alias="refresh.svg">icons/refresh.svg</file>
+        <file alias="download.svg">icons/download.svg</file>
+        <file alias="file_save.svg">icons/file_save.svg</file>
+        <file alias="save.svg">icons/save.svg</file>
     </qresource>
 </RCC>
