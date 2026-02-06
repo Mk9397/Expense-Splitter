@@ -3,10 +3,10 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
+import components
+import dialogs
+import popups
 import theme
-import "../components"
-import "../dialogs"
-import "../popups"
 
 Page {
     id: root

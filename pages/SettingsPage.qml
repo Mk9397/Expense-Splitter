@@ -4,9 +4,9 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 import QtQuick.Dialogs
 
+import components
+import dialogs
 import theme
-import "../components"
-import "../dialogs"
 
 Page {
     id: root
