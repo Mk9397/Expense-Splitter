@@ -9,6 +9,8 @@ import dialogs
 import popups
 import theme
 
+import "TripPage"
+
 Page {
     id: root
     property string tripId: ""
@@ -118,9 +120,14 @@ Page {
                     icon.source: "qrc:/icons/delete.svg"
                     icon.color: Material.color(Material.Red)
                     onTriggered: {
-                        deleteTripDialog.tripId = root.tripId
-                        deleteTripDialog.tripName = root.tripName
-                        deleteTripDialog.open()
+                        if (!settingsManager.confirmDeleteGroups) {
+                            root.StackView.view.pop()
+                            tripManager.deleteTrip(root.tripId)
+                        } else {
+                            deleteTripDialog.tripId = root.tripId
+                            deleteTripDialog.tripName = root.tripName
+                            deleteTripDialog.open()
+                        }
                     }
 
                     HoverHandler {
@@ -393,9 +400,13 @@ Page {
                             editExpenseDialog.open()
                         }
                         onDeleteExpense: {
-                            deleteExpenseDialog.expenseId = id
-                            deleteExpenseDialog.expenseTitle = title
-                            deleteExpenseDialog.open()
+                            if (!settingsManager.confirmDeleteExpenses) {
+                                tripManager.deleteExpense(id)
+                            } else {
+                                deleteExpenseDialog.expenseId = id
+                                deleteExpenseDialog.expenseTitle = title
+                                deleteExpenseDialog.open()
+                            }
                         }
                     }
                 }

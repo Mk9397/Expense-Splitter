@@ -218,9 +218,13 @@ Page {
                     }
 
                     onDeleteTrip: {
-                        deleteTripDialog.tripId = id
-                        deleteTripDialog.tripName = name
-                        deleteTripDialog.open()
+                        if (!settingsManager.confirmDeleteGroups) {
+                            tripManager.deleteTrip(id)
+                        } else {
+                            deleteTripDialog.tripId = id
+                            deleteTripDialog.tripName = name
+                            deleteTripDialog.open()
+                        }
                     }
 
                     onShareTrip: {
