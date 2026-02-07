@@ -15,13 +15,13 @@ Page {
     id: root
     property string tripId: ""
     property string tripName: tripManager ? tripManager.activeTrip.name : ""
-    property string tripCurrency: tripManager ? tripManager.activeTrip.currency : ""
-    property int participantCount: tripManager ? tripManager.participantCount : 0
 
+    property string tripCurrency: tripManager ? tripManager.activeTrip.currency : ""
     property string currencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
                                                           tripCurrency) : ""
-
     property real totalAmount: tripManager ? tripManager.totalSpent : 0
+
+    property int participantCount: tripManager ? tripManager.participantCount : 0
     property var participantModel: tripManager ? tripManager.participantModel : null
 
     function formatAmount(amount) {
@@ -66,7 +66,6 @@ Page {
             ToolButton {
                 icon.source: 'qrc:/icons/more_vert.svg'
                 onClicked: tripOptionsMenu.open()
-
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
                 }
@@ -244,7 +243,7 @@ Page {
                         text: {
                             let avgShare = 0
                             if (root.participantCount)
-                                avgShare = tripManager.averageSharePerPerson
+                                avgShare = tripManager ? tripManager.averageSharePerPerson : 0.00
                             return currencySymbol + formatAmount(avgShare)
                         }
                         font.pixelSize: 20
@@ -294,301 +293,60 @@ Page {
         SwipeView {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            currentIndex: tabBar.currentIndex
 
+            currentIndex: tabBar.currentIndex
             onCurrentIndexChanged: tabBar.currentIndex = currentIndex
 
-            // ExpensesTab {
-            //     id: expensesTab
-            // }
-
             // Expenses Tab
-            ColumnLayout {
-                spacing: 2
+            ExpensesTab {
+                participantModel: root.participantModel
+                currencySymbol: root.currencySymbol
+                participantCount: root.participantCount
+                expenseModel: tripManager ? tripManager.expenseModel : null
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.margins: 16
-                    Layout.topMargin: 12
-                    Layout.bottomMargin: 8
-                    spacing: 12
-
-                    Label {
-                        text: "Expenses"
-                        font.pixelSize: 16
-                        font.weight: Font.DemiBold
-                        Layout.fillWidth: true
-                        opacity: 0.87
-                    }
-
-                    Rectangle {
-                        width: 56
-                        height: 22
-                        radius: 11
-                        color: ThemeManager.isDark ? Qt.rgba(
-                                                         1, 1, 1,
-                                                         0.1) : Material.color(
-                                                         Material.Grey,
-                                                         Material.Shade200)
-
-                        Label {
-                            anchors.centerIn: parent
-                            text: expenseList.count + " items"
-                            opacity: 0.7
-                            font.pixelSize: 11
-                            font.weight: Font.Medium
-                        }
-                    }
+                onAddExpenseClicked: {
+                    addExpenseDialog.participantModel = root.participantModel
+                    addExpenseDialog.open()
                 }
-
-                ListView {
-                    id: expenseList
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.leftMargin: 16
-                    Layout.rightMargin: 16
-                    spacing: 10
-                    clip: true
-
-                    // Empty State
-                    ColumnLayout {
-                        anchors.centerIn: parent
-                        width: parent.width * 0.8
-                        visible: expenseList.count === 0
-
-                        Label {
-                            text: "No Expenses Yet"
-                            font.pixelSize: 22
-                            font.weight: Font.DemiBold
-                            Layout.alignment: Qt.AlignHCenter
-                            opacity: 0.87
-                        }
-                        Label {
-                            text: "Add one to get started!"
-                            font.pixelSize: 14
-                            Layout.alignment: Qt.AlignHCenter
-                            horizontalAlignment: Text.AlignHCenter
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                            opacity: 0.6
-                        }
-                    }
-
-                    model: tripManager ? tripManager.expenseModel : null
-
-                    delegate: ExpenseCard {
-                        width: ListView.view.width
-
-                        expenseTitle: title
-                        expenseAmount: amount
-                        expenseIcon: "💵"
-                        paidBy: participantModel ? participantModel.nameOfId(
-                                                       paid_by) : "Participant ID: " + paid_by
-                        splitType: split_type
-                        excludedIds: excluded ?? []
-
-                        tripCurrencySymbol: root.currencySymbol
-                        participantCount: root.participantCount
-                        onEditExpense: {
-                            editExpenseDialog.expenseId = id
-                            editExpenseDialog.expenseTitle = title
-                            editExpenseDialog.expenseAmount = amount
-                            editExpenseDialog.paidById = paid_by
-                            editExpenseDialog.splitType = split_type
-                            editExpenseDialog.excludedIds = excluded.slice()
-                            editExpenseDialog.participantModel = root.participantModel
-                            editExpenseDialog.open()
-                        }
-                        onDeleteExpense: {
-                            if (!settingsManager.confirmDeleteExpenses) {
-                                tripManager.deleteExpense(id)
-                            } else {
-                                deleteExpenseDialog.expenseId = id
-                                deleteExpenseDialog.expenseTitle = title
-                                deleteExpenseDialog.open()
-                            }
-                        }
-                    }
+                onEditExpenseClicked: function (id, title, amount, paidById, splitType, excludedIds) {
+                    editExpenseDialog.expenseId = id
+                    editExpenseDialog.expenseTitle = title
+                    editExpenseDialog.expenseAmount = amount
+                    editExpenseDialog.paidById = paidById
+                    editExpenseDialog.splitType = splitType
+                    editExpenseDialog.excludedIds = excludedIds
+                    editExpenseDialog.participantModel = root.participantModel
+                    editExpenseDialog.open()
                 }
-
-                Button {
-                    text: "Add Expense"
-                    Layout.fillWidth: true
-                    Layout.margins: 16
-                    Layout.topMargin: 8
-                    Layout.preferredHeight: 48
-                    font.pixelSize: 14
-                    font.weight: Font.DemiBold
-                    Material.elevation: 3
-                    highlighted: true
-                    onClicked: {
-                        addExpenseDialog.participantModel = root.participantModel
-                        addExpenseDialog.open()
-                    }
-
-                    HoverHandler {
-                        cursorShape: Qt.PointingHandCursor
+                onDeleteExpenseClicked: function (id, title) {
+                    if (!settingsManager.confirmDeleteExpenses) {
+                        tripManager.deleteExpense(id)
+                    } else {
+                        deleteExpenseDialog.expenseId = id
+                        deleteExpenseDialog.expenseTitle = title
+                        deleteExpenseDialog.open()
                     }
                 }
             }
-
-            // ParticipantsTab {
-            //     id: participantsTab
-            // }
 
             // Participants Tab
-            ColumnLayout {
-                spacing: 0
+            ParticipantsTab {
+                participantModel: root.participantModel
+                currencySymbol: root.currencySymbol
+                participantBalances: tripManager ? tripManager.participantBalances : ({})
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.margins: 16
-                    Layout.topMargin: 12
-                    Layout.bottomMargin: 8
-                    spacing: 12
-
-                    Label {
-                        text: "Participants"
-                        font.pixelSize: 16
-                        font.weight: Font.DemiBold
-                        Layout.fillWidth: true
-                        opacity: 0.87
-                    }
-
-                    Rectangle {
-                        width: 84
-                        height: 22
-                        radius: 11
-                        color: ThemeManager.isDark ? Qt.rgba(
-                                                         1, 1, 1,
-                                                         0.1) : Material.color(
-                                                         Material.Grey,
-                                                         Material.Shade200)
-
-                        Label {
-                            anchors.centerIn: parent
-                            text: participantList.count + " participants"
-                            opacity: 0.7
-                            font.pixelSize: 11
-                            font.weight: Font.Medium
-                        }
-                    }
-                }
-
-                ListView {
-                    id: participantList
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.leftMargin: 16
-                    Layout.rightMargin: 16
-                    spacing: 10
-                    clip: true
-
-                    model: root.participantModel
-
-                    delegate: ParticipantCard {
-                        required property string id
-                        required property string name
-
-                        width: ListView.view.width
-                        participantName: name
-                        currencySymbol: root.currencySymbol
-
-                        property var balanceData: tripManager.participantBalances[id]
-                                                  ?? {}
-
-                        totalPaid: balanceData.total_paid ?? 0
-                        shouldPay: balanceData.should_pay ?? 0
-                        balance: balanceData.balance ?? 0
-
-                        onDeleteParticipant: {
-                            deleteParticipantDialog.participantId = id
-                            deleteParticipantDialog.participantName = name
-                            deleteParticipantDialog.open()
-                        }
-                    }
-                }
-
-                Button {
-                    text: "Add Participant"
-                    Layout.fillWidth: true
-                    Layout.margins: 16
-                    Layout.topMargin: 8
-                    Layout.preferredHeight: 48
-                    font.pixelSize: 14
-                    font.weight: Font.DemiBold
-                    Material.elevation: 3
-                    highlighted: true
-                    onClicked: addParticipantDialog.open()
-
-                    HoverHandler {
-                        cursorShape: Qt.PointingHandCursor
-                    }
+                onAddParticipantClicked: addParticipantDialog.open()
+                onDeleteParticipantClicked: function (id, name) {
+                    deleteParticipantDialog.participantId = id
+                    deleteParticipantDialog.participantName = name
+                    deleteParticipantDialog.open()
                 }
             }
 
-            // SettlementsTab {
-            //     id: settlementTab
-            // }
-
             // Settlement Tab
-            ColumnLayout {
-                spacing: 2
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.margins: 16
-                    Layout.topMargin: 12
-                    Layout.bottomMargin: 8
-                    spacing: 12
-
-                    Label {
-                        text: "Balances"
-                        font.pixelSize: 16
-                        font.weight: Font.DemiBold
-                        Layout.fillWidth: true
-                        opacity: 0.87
-                    }
-
-                    Rectangle {
-                        width: 56
-                        height: 22
-                        radius: 11
-                        color: ThemeManager.isDark ? Qt.rgba(
-                                                         1, 1, 1,
-                                                         0.1) : Material.color(
-                                                         Material.Grey,
-                                                         Material.Shade200)
-
-                        Label {
-                            anchors.centerIn: parent
-                            text: settlementList.count + " items"
-                            opacity: 0.7
-                            font.pixelSize: 11
-                            font.weight: Font.Medium
-                        }
-                    }
-                }
-
-                ListView {
-                    id: settlementList
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.leftMargin: 16
-                    Layout.rightMargin: 16
-                    spacing: 10
-                    clip: true
-
-                    model: tripManager ? tripManager.settlementModel : null
-
-                    delegate: SettlementCard {
-                        width: ListView.view.width
-                        debtor: model.from_name
-                        creditor: model.to_name
-                        amount: formatAmount(model.amount)
-                        currencySymbol: root.currencySymbol
-                    }
-                }
+            SettlementsTab {
+                settlementModel: tripManager ? tripManager.settlementModel : null
+                currencySymbol: root.currencySymbol
             }
         }
     }
