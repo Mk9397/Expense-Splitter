@@ -312,10 +312,14 @@ Page {
         id: shareToast
     }
 
-    AddTripDialog {
+    GenericInputDialog {
         id: addTripDialog
-        onTripCreated: function (tripName) {
-            tripManager.addTrip(tripName)
+        dialogTitle: "Create New Group"
+        placeholderText: "Group name"
+        confirmButtonText: "Create Group"
+
+        onInputAccepted: function (text) {
+            tripManager.addTrip(text)
         }
     }
 

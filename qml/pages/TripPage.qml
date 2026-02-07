@@ -608,6 +608,38 @@ Page {
         }
     }
 
+    ExpenseDialog {
+        id: addExpenseDialog
+        isEditMode: false
+        participantModel: root.participantModel
+
+        onExpenseAccepted: function (expenseId, title, amount, paidBy, splitType, excluded) {
+            tripManager.addExpense(title, amount, paidBy, splitType, excluded)
+        }
+    }
+
+    ExpenseDialog {
+        id: editExpenseDialog
+        isEditMode: true
+        participantModel: root.participantModel
+
+        onExpenseAccepted: function (expenseId, title, amount, paidBy, splitType, excluded) {
+            tripManager.editExpense(expenseId, title, amount, paidBy,
+                                    splitType, excluded)
+        }
+    }
+
+    GenericInputDialog {
+        id: addParticipantDialog
+        dialogTitle: "Add New Participant"
+        placeholderText: "Name"
+        confirmButtonText: "Add Participant"
+
+        onInputAccepted: function (text) {
+            tripManager.addParticipant(text)
+        }
+    }
+
     ConfirmationDialog {
         id: deleteTripDialog
         property string tripId: ""
@@ -624,22 +656,6 @@ Page {
         }
     }
 
-    AddExpenseDialog {
-        id: addExpenseDialog
-        onExpenseCreated: function (expenseTitle, expenseAmount, paidBy, split_type, excluded) {
-            tripManager.addExpense(expenseTitle, expenseAmount, paidBy,
-                                   split_type, excluded)
-        }
-    }
-
-    EditExpenseDialog {
-        id: editExpenseDialog
-        onExpenseEdited: function (expenseId, expenseTitle, expenseAmount, paidBy, split_type, excluded) {
-            tripManager.editExpense(expenseId, expenseTitle, expenseAmount,
-                                    paidBy, split_type, excluded)
-        }
-    }
-
     ConfirmationDialog {
         id: deleteExpenseDialog
         property string expenseId: ""
@@ -651,13 +667,6 @@ Page {
         confirmText: "Delete"
         confirmColor: Material.color(Material.Red)
         onConfirmed: tripManager.deleteExpense(expenseId)
-    }
-
-    AddParticipantDialog {
-        id: addParticipantDialog
-        onParticipantCreated: function (participantName) {
-            tripManager.addParticipant(participantName)
-        }
     }
 
     ConfirmationDialog {

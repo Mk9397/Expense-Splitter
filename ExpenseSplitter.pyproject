@@ -1,12 +1,12 @@
 {
-    "qmlImportPaths": [
-        "qml",
-        "C:/ProgramData/anaconda3/envs/gui-env/Lib/site-packages/PySide6/qml/"
-    ],
     "files": [
         "main.py",
         "qml/main.qml",
         "qml/**/*.qml",
         "qml/**/*.js"
+    ],
+    "qmlImportPaths": [
+        "qml",
+        "C:/ProgramData/anaconda3/envs/gui-env/Lib/site-packages/PySide6/qml/"
     ]
 }

@@ -5,25 +5,36 @@ import QtQuick.Controls.Material
 
 Dialog {
     id: root
-    title: "Create New Group"
     modal: true
     anchors.centerIn: parent
     width: parent.width * 0.8
     padding: 24
 
-    signal tripCreated(string tripName)
+    property string dialogTitle: "Input"
+    property string placeholderText: "Enter value"
+    property string confirmButtonText: "Confirm"
+    property string cancelButtonText: "Cancel"
+    property string inputText: ""
+
+    signal inputAccepted(string text)
+
+    title: dialogTitle
 
     function confirm() {
         if (nameField.text.trim() !== "") {
-            root.tripCreated(nameField.text)
-            nameField.clear()
+            root.inputAccepted(nameField.text)
+            resetFields()
             root.close()
         }
     }
 
     function cancel() {
-        nameField.clear()
+        resetFields()
         root.close()
+    }
+
+    function resetFields() {
+        nameField.clear()
     }
 
     Overlay.modal: Rectangle {
@@ -47,8 +58,12 @@ Dialog {
             TextField {
                 id: nameField
                 Layout.fillWidth: true
-                placeholderText: "Group name"
+                placeholderText: root.placeholderText
                 font.pixelSize: 15
+                text: root.inputText
+
+                KeyNavigation.tab: confirmButton
+                KeyNavigation.backtab: cancelButton
             }
 
             RowLayout {
@@ -56,29 +71,39 @@ Dialog {
                 spacing: 12
 
                 Button {
-                    text: "Cancel"
+                    id: cancelButton
+                    text: root.cancelButtonText
                     Layout.fillWidth: true
                     Layout.preferredHeight: 48
                     flat: true
+
                     onClicked: root.cancel()
 
                     HoverHandler {
                         cursorShape: Qt.PointingHandCursor
                     }
+
+                    KeyNavigation.tab: confirmButton
+                    KeyNavigation.backtab: confirmButton
                 }
 
                 Button {
-                    text: "Create Group"
+                    id: confirmButton
+                    text: root.confirmButtonText
                     Layout.fillWidth: true
                     Layout.preferredHeight: 48
                     font.weight: Font.DemiBold
                     highlighted: true
                     enabled: nameField.text.trim().length > 0
+
                     onClicked: root.confirm()
 
                     HoverHandler {
                         cursorShape: Qt.PointingHandCursor
                     }
+
+                    KeyNavigation.tab: cancelButton
+                    KeyNavigation.backtab: cancelButton
                 }
             }
         }

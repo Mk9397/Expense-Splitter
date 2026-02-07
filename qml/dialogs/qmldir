@@ -1,11 +1,9 @@
 module dialogs
 
-AddExpenseDialog 1.0 AddExpenseDialog.qml
-EditExpenseDialog 1.0 EditExpenseDialog.qml
+ExpenseDialog 1.0 ExpenseDialog.qml
 
-AddParticipantDialog 1.0 AddParticipantDialog.qml
-
-AddTripDialog 1.0 AddTripDialog.qml
 EditTripDialog 1.0 EditTripDialog.qml
+
+GenericInputDialog 1.0 GenericInputDialog.qml
 
 ConfirmationDialog 1.0 ConfirmationDialog.qml

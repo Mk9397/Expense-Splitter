@@ -195,12 +195,16 @@ Popup {
         }
     }
 
-    AddParticipantDialog {
+    GenericInputDialog {
         id: participantDialog
-        onParticipantCreated: function (participantName) {
+        dialogTitle: "Add New Participant"
+        placeholderText: "Name"
+        confirmButtonText: "Add Participant"
+
+        onInputAccepted: function (text) {
             control.participantModel.append({
                                                 "id": tripManager.generateId(),
-                                                "name": participantName.trim()
+                                                "name": text.trim()
                                             })
         }
     }

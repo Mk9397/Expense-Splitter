@@ -8,26 +8,38 @@ import theme
 
 Dialog {
     id: root
-    title: "Add Expense"
     modal: true
     anchors.centerIn: parent
     width: parent.width * 0.88
     padding: 24
 
+    // Mode property
+    property bool isEditMode: false
+
+    // Edit mode properties
+    property string expenseId: ""
+    property string expenseTitle: ""
+    property real expenseAmount: 0
+    property string paidById: ""
+    property string splitType: "equal"
+
+    // Common properties
     property var excludedIds: []
     property var participantModel
 
-    signal expenseCreated(string expenseTitle, real expenseAmount, string paidById, string splitType, var excludedIds)
+    signal expenseAccepted(string expenseId, string expenseTitle, real expenseAmount, string paidById, string splitType, var excludedIds)
+
+    title: isEditMode ? "Edit Expense" : "Add Expense"
 
     function confirm() {
         if (titleField.text.trim() === "" || amountField.text.trim() === "") {
             return
         }
 
-        root.expenseCreated(titleField.text.trim(),
-                            parseFloat(amountField.text) || 0.00,
-                            paidByField.currentValue,
-                            splitTypeField.currentValue, root.excludedIds)
+        root.expenseAccepted(expenseId, titleField.text.trim(),
+                             parseFloat(amountField.text) || 0.00,
+                             paidByField.currentValue,
+                             splitTypeField.currentValue, root.excludedIds)
 
         resetFields()
         root.close()
@@ -39,18 +51,31 @@ Dialog {
     }
 
     function resetFields() {
-        titleField.clear()
-        amountField.clear()
-        paidByField.currentIndex = 0
-        splitTypeField.currentIndex = 0
-        root.excludedIds = []
+        if (!isEditMode) {
+            titleField.clear()
+            amountField.clear()
+            paidByField.currentIndex = 0
+            splitTypeField.currentIndex = 0
+            root.excludedIds = []
+        }
     }
 
     Overlay.modal: Rectangle {
         color: Material.dropShadowColor
     }
 
-    onOpened: titleField.forceActiveFocus()
+    onOpened: {
+        if (isEditMode) {
+            titleField.text = expenseTitle
+            amountField.text = expenseAmount.toString()
+            paidByField.currentIndex = participantModel.indexOfId(paidById)
+            splitTypeField.currentIndex = splitTypeField.model.indexOf(
+                        splitType)
+            root.excludedIds = excludedIds.slice()
+        }
+
+        titleField.forceActiveFocus()
+    }
 
     contentItem: Item {
         implicitWidth: contentLayout.implicitWidth
@@ -58,7 +83,7 @@ Dialog {
 
         Keys.onEscapePressed: root.cancel()
         Keys.onReturnPressed: {
-            if (submitButton.activeFocus || titleField.activeFocus
+            if (confirmButton.activeFocus || titleField.activeFocus
                     || amountField.activeFocus || paidByField.activeFocus
                     || splitTypeField.activeFocus) {
                 root.confirm()
@@ -78,7 +103,7 @@ Dialog {
                 font.pixelSize: 15
 
                 KeyNavigation.tab: amountField
-                KeyNavigation.backtab: submitButton
+                KeyNavigation.backtab: confirmButton
             }
 
             TextField {
@@ -137,13 +162,14 @@ Dialog {
                     implicitHeight: 45
                     model: ["equal", "personal"]
 
-                    KeyNavigation.tab: excludeBtn
+                    KeyNavigation.tab: excludeBtn.visible ? excludeBtn : cancelButton
                     KeyNavigation.backtab: paidByField
                 }
             }
 
             Button {
                 id: excludeBtn
+                visible: splitTypeField.currentValue !== "personal"
                 text: "Manage excluded participants"
                       + (excludedIds.length > 0 ? " (" + excludedIds.length + ")" : "")
                 flat: true
@@ -166,28 +192,49 @@ Dialog {
                     cursorShape: Qt.PointingHandCursor
                 }
 
-                KeyNavigation.tab: submitButton
+                KeyNavigation.tab: cancelButton
                 KeyNavigation.backtab: splitTypeField
             }
 
-            Button {
-                id: submitButton
-                text: "Add Expense"
+            RowLayout {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 48
-                font.weight: Font.DemiBold
-                highlighted: true
-                enabled: titleField.text.trim().length > 0
-                         && amountField.text.trim().length > 0
+                spacing: 12
 
-                onClicked: root.confirm()
+                Button {
+                    id: cancelButton
+                    text: "Cancel"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 48
+                    flat: true
 
-                HoverHandler {
-                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.cancel()
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
+
+                    KeyNavigation.tab: confirmButton
+                    KeyNavigation.backtab: excludeBtn.visible ? excludeBtn : splitTypeField
                 }
 
-                KeyNavigation.tab: titleField
-                KeyNavigation.backtab: excludeBtn
+                Button {
+                    id: confirmButton
+                    text: isEditMode ? "Save" : "Add Expense"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 48
+                    highlighted: true
+                    enabled: titleField.text.trim().length > 0
+                             && amountField.text.trim().length > 0
+
+                    onClicked: root.confirm()
+
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
+
+                    KeyNavigation.tab: titleField
+                    KeyNavigation.backtab: cancelButton
+                }
             }
         }
     }
