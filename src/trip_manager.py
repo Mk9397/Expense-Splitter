@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 import uuid
 
+from .app_state import AppState
 from .data.trip_repository import TripRepository
 from .settings_manager import SettingsManager
 from .models import (
@@ -36,10 +37,11 @@ class TripManager(QObject):
     participantsChanged = Signal()
     settlementsChanged = Signal()
 
-    def __init__(self, settings: SettingsManager, repo: TripRepository):
+    def __init__(self, settings: SettingsManager, repo: TripRepository, app_state: AppState):
         super().__init__()
         self.settings = settings
         self.repo = repo
+        self.app_state = app_state
 
         self._active_trip_id = ""
 
@@ -52,6 +54,12 @@ class TripManager(QObject):
         self._expense_model = ExpenseSqlModel(self.repo.db)
         self._participant_model = ParticipantSqlModel(self.repo.db)
         self._settlement_model = SettlementModel()
+
+        # ── Auto Sync State Change ────────────────────────────
+        self.activeTripChanged.connect(self._sync_app_state)
+        self.expensesChanged.connect(self._sync_app_state)
+        self.participantsChanged.connect(self._sync_app_state)
+        self.settlementsChanged.connect(self._sync_app_state)
 
     # ── Helper Methods ─────────────────────────────────────
     def _refresh_all(self):
@@ -81,6 +89,54 @@ class TripManager(QObject):
         self.expensesChanged.emit()
         self.participantsChanged.emit()
         self.settlementsChanged.emit()
+
+    def _sync_app_state(self):
+        """Sync current state to AppState"""
+        if not self._active_trip_id:
+            self.app_state.reset()
+            return
+
+        trip = self.repo.load_trip(self._active_trip_id)
+        if not trip:
+            self.app_state.reset()
+            return
+
+        self.app_state.tripId = self._active_trip_id
+        self.app_state.tripName = trip.get("name", "")
+        self.app_state.tripCurrency = trip.get("currency", "")
+        self.app_state.currencySymbol = self.settings.getCurrencySymbol(
+            trip.get("currency", "")
+        )
+
+        participants = trip.get("participants", [])
+        expenses = trip.get("expenses", [])
+
+        self.app_state.participantCount = self._participant_model.rowCount()
+        self.app_state.totalSpent = sum(expense["amount"] for expense in expenses)
+        self.app_state.participantList = participants
+
+        balances = get_participant_balances(participants, expenses)
+        self.app_state.participantBalances = balances
+
+        if balances:
+            total_should_pay = sum(data["should_pay"] for data in balances.values())
+            self.app_state.averageShare = total_should_pay / len(balances)
+        else:
+            self.app_state.averageShare = 0.0
+
+        # Model references
+        self.app_state.participantModel = self._participant_model
+        self.app_state.expenseModel = self._expense_model
+        self.app_state.settlementModel = self._settlement_model
+
+    # ── Active Trip Management ─────────────────────────────
+    @Slot(str)
+    def setActiveTrip(self, trip_id: str):
+        """Load a trip and update AppState"""
+        self._active_trip_id = trip_id
+        self.settings.setLastTripId(trip_id)
+        self.activeTripChanged.emit()
+        self._update_active_trip_models()
 
     @Slot(str)
     def setFilter(self, text: str):
@@ -197,15 +253,6 @@ class TripManager(QObject):
         settlements = get_settlement_transactions(balances)
         create_pdf(trip, balances, settlements, path)
         return str(path)
-
-    # ── Active Trip Management ─────────────────────────────
-    @Slot(str)
-    def setActiveTrip(self, trip_id: str):
-        """Set the current active trip and update expense model"""
-        self._active_trip_id = trip_id
-        self.settings.setLastTripId(trip_id)
-        self.activeTripChanged.emit()
-        self._update_active_trip_models()
 
     # ── Expense Operations ─────────────────────────────────
     @Slot(str, float, str, str, "QVariantList", result=str)

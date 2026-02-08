@@ -31,14 +31,17 @@ files = [
     "qml/popups/ParticipantMultiSelectPopup.qml",
     "qml/popups/ToastPopup.qml",
     "qml/popups/qmldir",
+    "qml/singletons/AppState.qml",
+    "qml/singletons/qmldir",
     "qml/theme/ThemeManager.qml",
     "qml/theme/qmldir",
     "resources.qrc",
+    "src/app_state.py"
     "src/data/trip_repository.py",
     "src/file_actions.py",
     "src/models.py",
     "src/services/settlement_service.py",
     "src/services/share_service.py",
     "src/settings_manager.py",
-    "src/trip_manager.py",
+    "src/trip_manager.py"
 ]
