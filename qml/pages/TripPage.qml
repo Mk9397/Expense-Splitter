@@ -7,6 +7,7 @@ import QtQuick.Effects
 import components
 import dialogs
 import popups
+import singletons
 import theme
 
 import "TripPage"
@@ -14,19 +15,9 @@ import "TripPage"
 Page {
     id: root
     property string tripId: ""
-    property string tripName: tripManager ? tripManager.activeTrip.name : ""
 
-    property string tripCurrency: tripManager ? tripManager.activeTrip.currency : ""
-    property string currencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
-                                                          tripCurrency) : ""
-    property real totalAmount: tripManager ? tripManager.totalSpent : 0
-
-    property int participantCount: tripManager ? tripManager.participantCount : 0
-    property var participantModel: tripManager ? tripManager.participantModel : null
-
-    function formatAmount(amount) {
-        return Number(amount).toLocaleString(Qt.locale(), 'f', 2)
-    }
+    Component.onCompleted: tripManager.setActiveTrip(tripId)
+    Component.onDestruction: AppState.reset()
 
     background: Rectangle {
         color: Material.background
@@ -44,10 +35,7 @@ Page {
 
             ToolButton {
                 icon.source: "qrc:/icons/chevron_left.svg"
-                onClicked: {
-                    root.StackView.view.pop()
-                    tripManager.setActiveTrip("")
-                }
+                onClicked: root.StackView.view.pop()
 
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
@@ -55,7 +43,7 @@ Page {
             }
 
             Label {
-                text: root.tripName
+                text: AppState.tripName
                 Layout.alignment: Qt.AlignVCenter
                 font.weight: Font.DemiBold
                 font.pixelSize: 18
@@ -80,9 +68,9 @@ Page {
                     text: "Edit Trip"
                     icon.source: "qrc:/icons/edit.svg"
                     onTriggered: {
-                        editTripDialog.tripName = root.tripName
-                        editTripDialog.participants = tripManager.participantsList
-                        editTripDialog.tripCurrency = root.tripCurrency
+                        editTripDialog.tripName = AppState.tripName
+                        editTripDialog.participants = AppState.participantList
+                        editTripDialog.tripCurrency = AppState.tripCurrency
                         editTripDialog.open()
                     }
                     HoverHandler {
@@ -124,7 +112,7 @@ Page {
                             tripManager.deleteTrip(root.tripId)
                         } else {
                             deleteTripDialog.tripId = root.tripId
-                            deleteTripDialog.tripName = root.tripName
+                            deleteTripDialog.tripName = AppState.tripName
                             deleteTripDialog.open()
                         }
                     }
@@ -182,7 +170,7 @@ Page {
                         color: Material.accent
                     }
                     Label {
-                        text: root.participantCount.toString()
+                        text: AppState.participantCount.toString()
                         font.pixelSize: 20
                         font.weight: Font.Bold
                         color: Material.accent
@@ -211,7 +199,7 @@ Page {
                         color: Material.accent
                     }
                     Label {
-                        text: currencySymbol + formatAmount(totalAmount)
+                        text: AppState.formattedTotal
                         font.pixelSize: 20
                         font.weight: Font.Bold
                         color: Material.accent
@@ -240,12 +228,7 @@ Page {
                         color: Material.accent
                     }
                     Label {
-                        text: {
-                            let avgShare = 0
-                            if (root.participantCount)
-                                avgShare = tripManager ? tripManager.averageSharePerPerson : 0.00
-                            return currencySymbol + formatAmount(avgShare)
-                        }
+                        text: AppState.formattedAverage
                         font.pixelSize: 20
                         font.weight: Font.Bold
                         color: Material.accent
@@ -297,17 +280,9 @@ Page {
             currentIndex: tabBar.currentIndex
             onCurrentIndexChanged: tabBar.currentIndex = currentIndex
 
-            // Expenses Tab
             ExpensesTab {
-                participantModel: root.participantModel
-                currencySymbol: root.currencySymbol
-                participantCount: root.participantCount
-                expenseModel: tripManager ? tripManager.expenseModel : null
+                onAddExpenseClicked: addExpenseDialog.open()
 
-                onAddExpenseClicked: {
-                    addExpenseDialog.participantModel = root.participantModel
-                    addExpenseDialog.open()
-                }
                 onEditExpenseClicked: function (id, title, amount, paidById, splitType, excludedIds) {
                     editExpenseDialog.expenseId = id
                     editExpenseDialog.expenseTitle = title
@@ -315,27 +290,23 @@ Page {
                     editExpenseDialog.paidById = paidById
                     editExpenseDialog.splitType = splitType
                     editExpenseDialog.excludedIds = excludedIds
-                    editExpenseDialog.participantModel = root.participantModel
                     editExpenseDialog.open()
                 }
+
                 onDeleteExpenseClicked: function (id, title) {
-                    if (!settingsManager.confirmDeleteExpenses) {
-                        tripManager.deleteExpense(id)
-                    } else {
+                    if (settingsManager.confirmDeleteExpenses) {
                         deleteExpenseDialog.expenseId = id
                         deleteExpenseDialog.expenseTitle = title
                         deleteExpenseDialog.open()
+                    } else {
+                        tripManager.deleteExpense(id)
                     }
                 }
             }
 
-            // Participants Tab
             ParticipantsTab {
-                participantModel: root.participantModel
-                currencySymbol: root.currencySymbol
-                participantBalances: tripManager ? tripManager.participantBalances : ({})
-
                 onAddParticipantClicked: addParticipantDialog.open()
+
                 onDeleteParticipantClicked: function (id, name) {
                     deleteParticipantDialog.participantId = id
                     deleteParticipantDialog.participantName = name
@@ -343,15 +314,9 @@ Page {
                 }
             }
 
-            // Settlement Tab
-            SettlementsTab {
-                settlementModel: tripManager ? tripManager.settlementModel : null
-                currencySymbol: root.currencySymbol
-            }
+            SettlementsTab {}
         }
     }
-
-    Component.onCompleted: tripManager.setActiveTrip(tripId)
 
     ToastPopup {
         id: shareToast
@@ -369,7 +334,7 @@ Page {
     ExpenseDialog {
         id: addExpenseDialog
         isEditMode: false
-        participantModel: root.participantModel
+        participantModel: AppState.participantModel
 
         onExpenseAccepted: function (expenseId, title, amount, paidBy, splitType, excluded) {
             tripManager.addExpense(title, amount, paidBy, splitType, excluded)
@@ -379,7 +344,7 @@ Page {
     ExpenseDialog {
         id: editExpenseDialog
         isEditMode: true
-        participantModel: root.participantModel
+        participantModel: AppState.participantModel
 
         onExpenseAccepted: function (expenseId, title, amount, paidBy, splitType, excluded) {
             tripManager.editExpense(expenseId, title, amount, paidBy,

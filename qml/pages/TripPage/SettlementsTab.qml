@@ -4,14 +4,12 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 
 import components
+import singletons
 import theme
 
 ColumnLayout {
     id: root
     spacing: 2
-
-    property var settlementModel
-    property string currencySymbol
 
     function formatAmount(amount) {
         return Number(amount).toLocaleString(Qt.locale(), 'f', 2)
@@ -58,14 +56,14 @@ ColumnLayout {
         spacing: 10
         clip: true
 
-        model: root.settlementModel
+        model: AppState.settlementModel
 
         delegate: SettlementCard {
             width: ListView.view.width
             debtor: model.from_name
             creditor: model.to_name
             amount: root.formatAmount(model.amount)
-            currencySymbol: root.currencySymbol
+            currencySymbol: AppState.currencySymbol
         }
     }
 }

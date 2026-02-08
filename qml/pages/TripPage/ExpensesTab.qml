@@ -4,16 +4,12 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 
 import components
+import singletons
 import theme
 
 ColumnLayout {
     id: root
     spacing: 2
-
-    property var participantModel
-    property string currencySymbol
-    property int participantCount
-    property var expenseModel
 
     signal addExpenseClicked
     signal editExpenseClicked(string id, string title, real amount, string paidById, string splitType, var excludedIds)
@@ -84,7 +80,7 @@ ColumnLayout {
             }
         }
 
-        model: root.expenseModel
+        model: AppState.expenseModel
 
         delegate: ExpenseCard {
             width: ListView.view.width
@@ -92,22 +88,17 @@ ColumnLayout {
             expenseTitle: title
             expenseAmount: amount
             expenseIcon: "💵"
-            paidBy: root.participantModel ? root.participantModel.nameOfId(
-                                                paid_by) : "Participant ID: " + paid_by
+            paidBy: AppState.participantModel?.nameOfId(paid_by) ?? ""
             splitType: split_type
             excludedIds: excluded ?? []
 
-            tripCurrencySymbol: root.currencySymbol
-            participantCount: root.participantCount
+            tripCurrencySymbol: AppState.currencySymbol
+            participantCount: AppState.participantCount
 
-            onEditExpense: {
-                root.editExpenseClicked(id, title, amount, paid_by, split_type,
-                                        excluded.slice())
-            }
+            onEditExpense: root.editExpenseClicked(id, title, amount, paid_by,
+                                                   split_type, excluded.slice())
 
-            onDeleteExpense: {
-                root.deleteExpenseClicked(id, title)
-            }
+            onDeleteExpense: root.deleteExpenseClicked(id, title)
         }
     }
 

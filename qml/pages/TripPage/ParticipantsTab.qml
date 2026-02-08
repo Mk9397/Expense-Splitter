@@ -4,18 +4,13 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 
 import components
+import singletons
 import theme
 
 ColumnLayout {
     id: root
     spacing: 0
 
-    // Properties
-    property var participantModel
-    property string currencySymbol
-    property var participantBalances
-
-    // Signals
     signal addParticipantClicked
     signal deleteParticipantClicked(string id, string name)
 
@@ -60,7 +55,7 @@ ColumnLayout {
         spacing: 10
         clip: true
 
-        model: root.participantModel
+        model: AppState.participantModel
 
         delegate: ParticipantCard {
             required property string id
@@ -68,17 +63,15 @@ ColumnLayout {
 
             width: ListView.view.width
             participantName: name
-            currencySymbol: root.currencySymbol
+            currencySymbol: AppState.currencySymbol
 
-            property var balanceData: root.participantBalances[id] ?? {}
+            property var balanceData: AppState.participantBalances[id] ?? {}
 
             totalPaid: balanceData.total_paid ?? 0
             shouldPay: balanceData.should_pay ?? 0
             balance: balanceData.balance ?? 0
 
-            onDeleteParticipant: {
-                root.deleteParticipantClicked(id, name)
-            }
+            onDeleteParticipant: root.deleteParticipantClicked(id, name)
         }
     }
 

@@ -11,7 +11,7 @@ import theme
 Page {
     id: root
     title: "Groups"
-    property int totalTrips: tripManager ? tripManager.tripCount : 0
+    property int totalTrips: tripManager?.tripCount ?? 0
 
     background: Rectangle {
         color: Material.background
@@ -194,7 +194,7 @@ Page {
                 bottomMargin: 20
 
                 // model: ListModel {}
-                model: tripManager ? tripManager.proxyModel : null
+                model: tripManager?.proxyModel ?? null
 
                 delegate: TripCard {
                     width: ListView.view.width
@@ -212,7 +212,8 @@ Page {
                     onEditTrip: {
                         editTripDialog.tripId = id
                         editTripDialog.tripName = name
-                        editTripDialog.participants = participants
+                        editTripDialog.participants = tripManager.getParticipants(
+                                    id)
                         editTripDialog.tripCurrency = currency
                         editTripDialog.open()
                     }

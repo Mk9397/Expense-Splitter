@@ -148,46 +148,16 @@ class TripManager(QObject):
         """Get total number of trips"""
         return self._trip_model.rowCount()
 
-    @Property("QVariantMap", notify=activeTripChanged)
-    def activeTrip(self):
-        """Get current active trip"""
-        if not self._active_trip_id:
-            return {}
-        trip = self.repo.load_trip(self._active_trip_id)
-        return trip or {}
-
     @Property(QObject, notify=tripsChanged)
     def proxyModel(self):
         """Get the proxy model for trips"""
         return self._proxy_model
 
-    @Property(QObject, notify=expensesChanged)
-    def expenseModel(self):
-        """Get the model for expenses"""
-        return self._expense_model
-
-    @Property(QObject, notify=participantsChanged)
-    def participantModel(self):
-        """Get the model for participants"""
-        return self._participant_model
-
-    @Property(QObject, notify=settlementsChanged)
-    def settlementModel(self):
-        """Get the model for settlements"""
-        return self._settlement_model
-
-    @Property("QVariantList", notify=participantsChanged)
-    def participantsList(self):
-        """Get the list of participants"""
-        if not self._active_trip_id:
-            return []
-        trip = self.repo.load_trip(self._active_trip_id)
+    @Slot(str, result="QVariantList")
+    def getParticipants(self, trip_id: str):
+        """Get participants for a specific trip"""
+        trip = self.repo.load_trip(trip_id)
         return trip.get("participants", []) if trip else []
-
-    @Property(int, notify=participantsChanged)
-    def participantCount(self):
-        """Get the number of participants"""
-        return self._participant_model.rowCount()
 
     # ── Trip Operations ────────────────────────────────────
     @Slot(str, result=str)
@@ -334,17 +304,6 @@ class TripManager(QObject):
         self._update_active_trip_models()
         return True
 
-    @Property(float, notify=expensesChanged)
-    def totalSpent(self) -> float:
-        """Get total expenses for current trip"""
-        if not self._active_trip_id:
-            return 0.0
-
-        trip = self.repo.load_trip(self._active_trip_id)
-        if not trip:
-            return 0.0
-        return sum(expense["amount"] for expense in trip.get("expenses", []))
-
     # ── Participant Operations ─────────────────────────────
     @Slot(str, result=str)
     def addParticipant(self, name: str) -> str:
@@ -409,29 +368,6 @@ class TripManager(QObject):
     @Slot(result=str)
     def generateId(self) -> str:
         return str(uuid.uuid4())
-
-    @Property(dict, notify=expensesChanged)
-    def participantBalances(self) -> dict:
-        """Returns a dictionary with balance info for each participant"""
-        if not self._active_trip_id:
-            return {}
-
-        trip = self.repo.load_trip(self._active_trip_id)
-        if not trip:
-            return {}
-
-        participants = trip.get("participants", [])
-        expenses = trip.get("expenses", [])
-        return get_participant_balances(participants, expenses)
-
-    @Property(float, notify=expensesChanged)
-    def averageSharePerPerson(self) -> float:
-        """Get average 'should_pay' across participants for the current trip"""
-        balances = self.participantBalances
-        if not balances:
-            return 0.0
-        total_should_pay = sum(data["should_pay"] for data in balances.values())
-        return total_should_pay / len(balances) if balances else 0.0
 
     # ── Data Management Operations ─────────────────────────────
     @Slot(result=bool)
