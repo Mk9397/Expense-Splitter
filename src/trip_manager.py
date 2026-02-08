@@ -248,12 +248,7 @@ class TripManager(QObject):
             "created_at": datetime.now().isoformat(),
         }
         self.repo.insert_expense(self._active_trip_id, expense)
-
-        # Update trip's updated_at
-        trip = self.repo.load_trip(self._active_trip_id)
-        if trip:
-            trip["updated_at"] = datetime.now().isoformat()
-            self.repo.update_trip(trip)
+        self.repo.update_trip_timestamp(self._active_trip_id)
 
         self._refresh_all()
         self._update_active_trip_models()
@@ -266,6 +261,8 @@ class TripManager(QObject):
             return False
 
         self.repo.delete_expense(expense_id)
+        self.repo.update_trip_timestamp(self._active_trip_id)
+
         self._refresh_all()
         self._update_active_trip_models()
         return True
@@ -293,12 +290,7 @@ class TripManager(QObject):
             "excluded": excluded,
         }
         self.repo.update_expense(expense)
-
-        # Update trip's updated_at
-        trip = self.repo.load_trip(self._active_trip_id)
-        if trip:
-            trip["updated_at"] = datetime.now().isoformat()
-            self.repo.update_trip(trip)
+        self.repo.update_trip_timestamp(self._active_trip_id)
 
         self._refresh_all()
         self._update_active_trip_models()
@@ -313,12 +305,7 @@ class TripManager(QObject):
 
         participant = {"id": str(uuid.uuid4()), "name": name}
         self.repo.insert_participant(self._active_trip_id, participant)
-
-        # Update trip's updated_at
-        trip = self.repo.load_trip(self._active_trip_id)
-        if trip:
-            trip["updated_at"] = datetime.now().isoformat()
-            self.repo.update_trip(trip)
+        self.repo.update_trip_timestamp(self._active_trip_id)
 
         self._refresh_all()
         self._update_active_trip_models()
@@ -342,6 +329,8 @@ class TripManager(QObject):
                 self.repo.update_expense(expense)
 
         self.repo.delete_participant(participant_id)
+        self.repo.update_trip_timestamp(self._active_trip_id)
+        
         self._refresh_all()
         self._update_active_trip_models()
         return True
@@ -354,12 +343,7 @@ class TripManager(QObject):
 
         participant = {"id": participant_id, "name": name}
         self.repo.update_participant(participant)
-
-        # Update trip's updated_at
-        trip = self.repo.load_trip(self._active_trip_id)
-        if trip:
-            trip["updated_at"] = datetime.now().isoformat()
-            self.repo.update_trip(trip)
+        self.repo.update_trip_timestamp(self._active_trip_id)
 
         self._refresh_all()
         self._update_active_trip_models()

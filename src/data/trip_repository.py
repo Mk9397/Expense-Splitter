@@ -10,6 +10,7 @@ from datetime import datetime
 class TripRepository:
     def __init__(self):
         self._open_db()
+        self._trip_cache = {}
 
     def _open_db(self):
         base = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
@@ -81,6 +82,9 @@ class TripRepository:
 
     # ── Public API ─────────────────────────────────
     def load_trip(self, trip_id: str) -> dict | None:
+        if trip_id in self._trip_cache:
+            return self._trip_cache[trip_id]
+
         query = QSqlQuery(self.db)
         query.prepare("SELECT * FROM trips WHERE id = ?")
         query.addBindValue(trip_id)
@@ -141,7 +145,13 @@ class TripRepository:
             if eid in expense_map:
                 expense_map[eid]["excluded"].append(pid)
 
+        if trip:
+            self._trip_cache[trip_id] = trip
         return trip
+
+    def _invalidate_trip_cache(self, trip_id: str):
+        """Remove from cache when trip is modified"""
+        self._trip_cache.pop(trip_id, None)
 
     def load_all_trips(self) -> list[dict]:
         """Load all trips with their full data"""
@@ -187,18 +197,30 @@ class TripRepository:
         query.addBindValue(trip["updated_at"])
         query.addBindValue(trip["id"])
         query.exec()
+        self._invalidate_trip_cache(trip["id"])
+
+    def update_trip_timestamp(self, trip_id: str):
+        """Update only the updated_at field"""
+        query = QSqlQuery(self.db)
+        query.prepare("UPDATE trips SET updated_at = ? WHERE id = ?")
+        query.addBindValue(datetime.now().isoformat())
+        query.addBindValue(trip_id)
+        query.exec()
+        self._invalidate_trip_cache(trip_id)
 
     def delete_trip(self, trip_id: str):
         query = QSqlQuery(self.db)
         query.prepare("DELETE FROM trips WHERE id = ?")
         query.addBindValue(trip_id)
         query.exec()  # CASCADE deletes participants/expenses automatically
+        self._invalidate_trip_cache(trip_id)
 
     def delete_all_trips(self):
         """Delete all trips and related data from the database"""
         query = QSqlQuery(self.db)
         # Thanks to CASCADE, deleting trips will delete everything
         query.exec("DELETE FROM trips")
+        self._trip_cache.clear()
         return query.numRowsAffected() >= 0
 
     # ── Participants ───────────────────────────────
@@ -214,25 +236,36 @@ class TripRepository:
         query.addBindValue(trip_id)
         query.addBindValue(participant["name"])
         query.exec()
+        self._invalidate_trip_cache(trip_id)
 
     def update_participant(self, participant: dict):
         query = QSqlQuery(self.db)
-        query.prepare(
-            """
-            UPDATE participants
-            SET name = ?
-            WHERE id = ?
-        """
-        )
+        query.prepare("SELECT trip_id FROM participants WHERE id = ?")
+        query.addBindValue(participant["id"])
+        query.exec()
+        trip_id = query.value(0) if query.next() else None
+
+        query.prepare("UPDATE participants SET name = ? WHERE id = ?")
         query.addBindValue(participant["name"])
         query.addBindValue(participant["id"])
         query.exec()
 
+        if trip_id:
+            self._invalidate_trip_cache(trip_id)
+
     def delete_participant(self, participant_id: str):
         query = QSqlQuery(self.db)
+        query.prepare("SELECT trip_id FROM participants WHERE id = ?")
+        query.addBindValue(participant_id)
+        query.exec()
+        trip_id = query.value(0) if query.next() else None
+
         query.prepare("DELETE FROM participants WHERE id = ?")
         query.addBindValue(participant_id)
-        return query.exec()  # CASCADE deletes exclusions
+        query.exec()  # CASCADE deletes exclusions
+
+        if trip_id:
+            self._invalidate_trip_cache(trip_id)
 
     def replace_participants(self, trip_id: str, participants: list[dict]):
         query = QSqlQuery(self.db)
@@ -242,6 +275,7 @@ class TripRepository:
 
         for p in participants:
             self.insert_participant(trip_id, p)
+        self._invalidate_trip_cache(trip_id)
 
     # ── Expenses ───────────────────────────────
     def insert_expense(self, trip_id: str, expense: dict):
@@ -263,9 +297,15 @@ class TripRepository:
 
         for pid in expense.get("excluded", []):
             self.insert_expense_exclusion(expense["id"], pid)
+        self._invalidate_trip_cache(trip_id)
 
     def update_expense(self, expense: dict):
         query = QSqlQuery(self.db)
+        query.prepare("SELECT trip_id FROM expenses WHERE id = ?")
+        query.addBindValue(expense["id"])
+        query.exec()
+        trip_id = query.value(0) if query.next() else None
+
         query.prepare(
             """
             UPDATE expenses
@@ -287,11 +327,22 @@ class TripRepository:
         for pid in expense.get("excluded", []):
             self.insert_expense_exclusion(expense["id"], pid)
 
+        if trip_id:
+            self._invalidate_trip_cache(trip_id)
+
     def delete_expense(self, expense_id: str):
         query = QSqlQuery(self.db)
+        query.prepare("SELECT trip_id FROM expenses WHERE id = ?")
+        query.addBindValue(expense_id)
+        query.exec()
+        trip_id = query.value(0) if query.next() else None
+
         query.prepare("DELETE FROM expenses WHERE id = ?")
         query.addBindValue(expense_id)
         query.exec()
+
+        if trip_id:
+            self._invalidate_trip_cache(trip_id)
 
     def insert_expense_exclusion(self, expense_id: str, participant_id: str):
         query = QSqlQuery(self.db)
@@ -299,7 +350,7 @@ class TripRepository:
             """
             INSERT OR IGNORE INTO expense_excluded (expense_id, participant_id)
             VALUES (?, ?)
-        """
+            """
         )
         query.addBindValue(expense_id)
         query.addBindValue(participant_id)

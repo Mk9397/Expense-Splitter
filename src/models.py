@@ -5,8 +5,7 @@ from PySide6.QtCore import (
     Qt,
     Slot,
 )
-from PySide6.QtSql import QSqlQuery, QSqlQueryModel, QSqlTableModel
-import uuid
+from PySide6.QtSql import QSqlQuery, QSqlQueryModel
 
 
 class TripSqlModel(QSqlQueryModel):
@@ -16,12 +15,10 @@ class TripSqlModel(QSqlQueryModel):
     CreatedAtRole = Qt.UserRole + 4
     UpdatedAtRole = Qt.UserRole + 5
     ParticipantCountRole = Qt.UserRole + 6
-    ParticipantsRole = Qt.UserRole + 7
 
     def __init__(self, db, parent=None):
         super().__init__(parent)
         self.db = db
-        self._participants_cache = {}
         self.select()
 
     def roleNames(self):
@@ -32,15 +29,9 @@ class TripSqlModel(QSqlQueryModel):
             self.CreatedAtRole: b"created_at",
             self.UpdatedAtRole: b"updated_at",
             self.ParticipantCountRole: b"participant_count",
-            self.ParticipantsRole: b"participants",
         }
 
     def data(self, index, role=Qt.DisplayRole):
-        if role == self.ParticipantsRole:
-            # Get trip ID from the row
-            trip_id = super().data(self.index(index.row(), 0))
-            return self._participants_cache.get(trip_id, [])
-
         if role >= Qt.UserRole:
             column_map = {
                 self.IdRole: 0,
@@ -72,27 +63,6 @@ class TripSqlModel(QSqlQueryModel):
             """
         )
         self.setQuery(query)
-
-        # Load all participants for all trips
-        self._load_all_participants()
-
-    def _load_all_participants(self):
-        """Load participants for all trips into cache"""
-        self._participants_cache.clear()
-
-        query = QSqlQuery(self.db)
-        query.exec("SELECT id, trip_id, name FROM participants ORDER BY trip_id")
-
-        while query.next():
-            trip_id = query.value(1)
-            participant = {
-                "id": query.value(0),
-                "name": query.value(2),
-            }
-
-            if trip_id not in self._participants_cache:
-                self._participants_cache[trip_id] = []
-            self._participants_cache[trip_id].append(participant)
 
 
 class TripFilterProxy(QSortFilterProxyModel):
@@ -257,57 +227,6 @@ class ParticipantSqlModel(QSqlQueryModel):
         query.addBindValue(participant_id)
         query.exec()
         return query.next() and query.value(0) or ""
-
-
-class ParticipantTableModel(QSqlTableModel):
-    IdRole = Qt.UserRole + 1
-    NameRole = Qt.UserRole + 2
-
-    def __init__(self, db, parent=None):
-        super().__init__(parent, db)
-        self.setTable("participants")
-        self.setEditStrategy(QSqlTableModel.OnManualSubmit)
-
-    def roleNames(self):
-        return {
-            self.IdRole: b"id",
-            self.NameRole: b"name",
-        }
-
-    def data(self, index, role):
-        if role >= Qt.UserRole:
-            column_map = {
-                self.IdRole: self.fieldIndex("id"),
-                self.NameRole: self.fieldIndex("name"),
-            }
-            return super().data(self.index(index.row(), column_map[role]))
-        return super().data(index, role)
-
-    @Slot(str)
-    def setTrip(self, trip_id: str):
-        self.setFilter(f"trip_id = '{trip_id}'")
-        self.select()
-
-    @Slot(str, result=str)
-    def addParticipant(self, name: str) -> str:
-        """Add new participant to current trip"""
-        participant_id = str(uuid.uuid4())
-        record = self.record()
-        record.setValue("id", participant_id)
-        record.setValue("name", name)
-        # trip_id will be set by filter
-        self.insertRecord(-1, record)
-        return participant_id
-
-    @Slot(result=bool)
-    def submitAll(self) -> bool:
-        """Commit all pending changes"""
-        return super().submitAll()
-
-    @Slot()
-    def revertAll(self):
-        """Discard all pending changes"""
-        super().revertAll()
 
 
 class SettlementModel(QAbstractListModel):
