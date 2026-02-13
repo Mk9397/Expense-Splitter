@@ -38,10 +38,10 @@ ApplicationWindow {
         }
         ThemeManager.theme = themeMode
 
-        let lastTripId = settingsManager.lastTripId
-        if (settingsManager.openLastTrip && lastTripId) {
-            stack.push("pages/TripPage.qml", {
-                           "tripId": lastTripId
+        let lastGroupId = settingsManager.lastGroupId
+        if (settingsManager.openLastGroup && lastGroupId) {
+            stack.push("pages/GroupPage.qml", {
+                           "groupId": lastGroupId
                        })
         }
     }

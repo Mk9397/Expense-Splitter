@@ -7,7 +7,7 @@ SearchBar 1.0 SearchBar.qml
 ExpenseCard 1.0 ExpenseCard.qml
 ParticipantCard 1.0 ParticipantCard.qml
 SettlementCard 1.0 SettlementCard.qml
-TripCard 1.0 TripCard.qml
+GroupCard 1.0 GroupCard.qml
 
 SettingsCard 1.0 SettingsCard.qml
 

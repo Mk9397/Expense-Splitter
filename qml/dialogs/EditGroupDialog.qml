@@ -15,15 +15,15 @@ Dialog {
     width: parent.width * 0.88
     padding: 24
 
-    property string tripId: ""
-    property string tripName: ""
+    property string groupId: ""
+    property string groupName: ""
     property var participants: []
-    property string tripCurrency: ""
+    property string groupCurrency: ""
 
-    signal tripEdited(string tripId, string tripName, var participants, string tripCurrency)
+    signal groupEdited(string id, string name, var participants, string currency)
 
     function confirm() {
-        if (editTripNameField.text.trim() === "") {
+        if (editGroupNameField.text.trim() === "") {
             return
         }
 
@@ -35,8 +35,8 @@ Dialog {
                                  })
         }
 
-        root.tripEdited(
-                    root.tripId, editTripNameField.text.trim(),
+        root.groupEdited(
+                    root.groupId, editGroupNameField.text.trim(),
                     newParticipants,
                     editCurrencyCombo.model[editCurrencyCombo.currentIndex].code)
 
@@ -57,7 +57,7 @@ Dialog {
             participantModel.append(p)
         }
 
-        editTripNameField.forceActiveFocus()
+        editGroupNameField.forceActiveFocus()
     }
 
     contentItem: Item {
@@ -66,7 +66,7 @@ Dialog {
 
         Keys.onEscapePressed: root.cancel()
         Keys.onReturnPressed: {
-            if (saveButton.activeFocus || editTripNameField.activeFocus
+            if (saveButton.activeFocus || editGroupNameField.activeFocus
                     || editCurrencyCombo.activeFocus) {
                 root.confirm()
             }
@@ -78,10 +78,10 @@ Dialog {
             spacing: 16
 
             TextField {
-                id: editTripNameField
+                id: editGroupNameField
                 Layout.fillWidth: true
                 placeholderText: "Group name"
-                text: root.tripName
+                text: root.groupName
                 font.pixelSize: 15
 
                 KeyNavigation.tab: editCurrencyCombo
@@ -91,10 +91,10 @@ Dialog {
             CurrencyComboBox {
                 id: editCurrencyCombo
                 Layout.fillWidth: true
-                currentCode: root.tripCurrency
+                currentCode: root.groupCurrency
 
                 KeyNavigation.tab: manageParticipantsButton
-                KeyNavigation.backtab: editTripNameField
+                KeyNavigation.backtab: editGroupNameField
             }
 
             Button {
@@ -142,7 +142,7 @@ Dialog {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 48
                     highlighted: true
-                    enabled: editTripNameField.text.trim().length > 0
+                    enabled: editGroupNameField.text.trim().length > 0
 
                     onClicked: root.confirm()
 
@@ -150,7 +150,7 @@ Dialog {
                         cursorShape: Qt.PointingHandCursor
                     }
 
-                    KeyNavigation.tab: editTripNameField
+                    KeyNavigation.tab: editGroupNameField
                     KeyNavigation.backtab: cancelButton
                 }
             }

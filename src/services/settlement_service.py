@@ -37,9 +37,9 @@ def get_participant_balances(
 
         else:  # "equal" (default)
             share = round(amount / participant_count, 2)
-            for mid in participants:
-                if mid in balances:
-                    balances[mid]["should_pay"] += share
+            for pid in participants:
+                if pid in balances:
+                    balances[pid]["should_pay"] += share
 
     for data in balances.values():
         data["balance"] = data["total_paid"] - data["should_pay"]

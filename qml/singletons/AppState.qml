@@ -8,10 +8,10 @@ QtObject {
     // Reference to Python context property (internal)
     readonly property var _appState: typeof appState !== 'undefined' ? appState : null
 
-    // Trip properties
-    readonly property string tripId: _appState?.tripId ?? ""
-    readonly property string tripName: _appState?.tripName ?? ""
-    readonly property string tripCurrency: _appState?.tripCurrency ?? ""
+    // Group properties
+    readonly property string groupId: _appState?.groupId ?? ""
+    readonly property string groupName: _appState?.groupName ?? ""
+    readonly property string groupCurrency: _appState?.groupCurrency ?? ""
     readonly property string currencySymbol: _appState?.currencySymbol ?? ""
 
     // Numeric properties

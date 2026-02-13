@@ -2,7 +2,7 @@ module dialogs
 
 ExpenseDialog 1.0 ExpenseDialog.qml
 
-EditTripDialog 1.0 EditTripDialog.qml
+EditGroupDialog 1.0 EditGroupDialog.qml
 
 GenericInputDialog 1.0 GenericInputDialog.qml
 

@@ -6,20 +6,20 @@ from pathlib import Path
 import uuid
 
 from .app_state import AppState
-from .data.trip_repository import TripRepository
-from .settings_manager import SettingsManager
-from .models import (
+from .data.group_repository import GroupRepository
+from .data.models import (
     ExpenseSqlModel,
+    GroupFilterProxy,
+    GroupSqlModel,
     ParticipantSqlModel,
     SettlementModel,
-    TripFilterProxy,
-    TripSqlModel,
 )
 from .services.settlement_service import (
     get_participant_balances,
     get_settlement_transactions,
 )
 from .services.share_service import create_pdf
+from .settings_manager import SettingsManager
 
 QML_IMPORT_NAME = "com.expensesplitter.backend"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -27,36 +27,38 @@ QML_IMPORT_MINOR_VERSION = 0
 
 
 @QmlElement
-class TripManager(QObject):
-    """Backend manager for trips with model integration"""
+class GroupManager(QObject):
+    """Backend manager for groups with model integration"""
 
     # ── Signals ───────────────────────────────────────
-    tripsChanged = Signal()
-    activeTripChanged = Signal()
+    groupsChanged = Signal()
+    activeGroupChanged = Signal()
     expensesChanged = Signal()
     participantsChanged = Signal()
     settlementsChanged = Signal()
 
-    def __init__(self, settings: SettingsManager, repo: TripRepository, app_state: AppState):
+    def __init__(
+        self, settings: SettingsManager, repo: GroupRepository, app_state: AppState
+    ):
         super().__init__()
         self.settings = settings
         self.repo = repo
         self.app_state = app_state
 
-        self._active_trip_id = ""
+        self._active_group_id = ""
 
         # ── Models ────────────────────────────────────────────
-        self._trip_model = TripSqlModel(self.repo.db)
+        self._group_model = GroupSqlModel(self.repo.db)
 
-        self._proxy_model = TripFilterProxy()
-        self._proxy_model.setSourceModel(self._trip_model)
+        self._proxy_model = GroupFilterProxy()
+        self._proxy_model.setSourceModel(self._group_model)
 
         self._expense_model = ExpenseSqlModel(self.repo.db)
         self._participant_model = ParticipantSqlModel(self.repo.db)
         self._settlement_model = SettlementModel()
 
         # ── Auto Sync State Change ────────────────────────────
-        self.activeTripChanged.connect(self._sync_app_state)
+        self.activeGroupChanged.connect(self._sync_app_state)
         self.expensesChanged.connect(self._sync_app_state)
         self.participantsChanged.connect(self._sync_app_state)
         self.settlementsChanged.connect(self._sync_app_state)
@@ -64,23 +66,23 @@ class TripManager(QObject):
     # ── Helper Methods ─────────────────────────────────────
     def _refresh_all(self):
         """Refresh all models"""
-        self._trip_model.select()
-        self.tripsChanged.emit()
+        self._group_model.select()
+        self.groupsChanged.emit()
 
-    def _update_active_trip_models(self):
-        """Update models for the active trip"""
-        if not self._active_trip_id:
+    def _update_active_group_models(self):
+        """Update models for the active group"""
+        if not self._active_group_id:
             return
 
-        # Set SQL models to filter by active trip
-        self._expense_model.setTrip(self._active_trip_id)
-        self._participant_model.setTrip(self._active_trip_id)
+        # Set SQL models to filter by active group
+        self._expense_model.setGroup(self._active_group_id)
+        self._participant_model.setGroup(self._active_group_id)
 
         # Load data for settlements (still requires in-memory calculation)
-        trip = self.repo.load_trip(self._active_trip_id)
-        if trip:
-            participants = trip.get("participants", [])
-            expenses = trip.get("expenses", [])
+        group = self.repo.load_group(self._active_group_id)
+        if group:
+            participants = group.get("participants", [])
+            expenses = group.get("expenses", [])
             balances = get_participant_balances(participants, expenses)
             settlements = get_settlement_transactions(balances)
             self._settlement_model.setSettlements(settlements)
@@ -92,24 +94,24 @@ class TripManager(QObject):
 
     def _sync_app_state(self):
         """Sync current state to AppState"""
-        if not self._active_trip_id:
+        if not self._active_group_id:
             self.app_state.reset()
             return
 
-        trip = self.repo.load_trip(self._active_trip_id)
-        if not trip:
+        group = self.repo.load_group(self._active_group_id)
+        if not group:
             self.app_state.reset()
             return
 
-        self.app_state.tripId = self._active_trip_id
-        self.app_state.tripName = trip.get("name", "")
-        self.app_state.tripCurrency = trip.get("currency", "")
+        self.app_state.groupId = self._active_group_id
+        self.app_state.groupName = group.get("name", "")
+        self.app_state.groupCurrency = group.get("currency", "")
         self.app_state.currencySymbol = self.settings.getCurrencySymbol(
-            trip.get("currency", "")
+            group.get("currency", "")
         )
 
-        participants = trip.get("participants", [])
-        expenses = trip.get("expenses", [])
+        participants = group.get("participants", [])
+        expenses = group.get("expenses", [])
 
         self.app_state.participantCount = self._participant_model.rowCount()
         self.app_state.totalSpent = sum(expense["amount"] for expense in expenses)
@@ -129,99 +131,99 @@ class TripManager(QObject):
         self.app_state.expenseModel = self._expense_model
         self.app_state.settlementModel = self._settlement_model
 
-    # ── Active Trip Management ─────────────────────────────
+    # ── Active Group Management ────────────────────────────
     @Slot(str)
-    def setActiveTrip(self, trip_id: str):
-        """Load a trip and update AppState"""
-        self._active_trip_id = trip_id
-        self.settings.setLastTripId(trip_id)
-        self.activeTripChanged.emit()
-        self._update_active_trip_models()
+    def setActiveGroup(self, group_id: str):
+        """Load a group and update AppState"""
+        self._active_group_id = group_id
+        self.settings.setLastGroupId(group_id)
+        self.activeGroupChanged.emit()
+        self._update_active_group_models()
 
     @Slot(str)
     def setFilter(self, text: str):
         """QML search field"""
         self._proxy_model.setFilterFixedString(text)
 
-    @Property(int, notify=tripsChanged)
-    def tripCount(self):
-        """Get total number of trips"""
-        return self._trip_model.rowCount()
+    @Property(int, notify=groupsChanged)
+    def groupCount(self):
+        """Get total number of groups"""
+        return self._group_model.rowCount()
 
-    @Property(QObject, notify=tripsChanged)
+    @Property(QObject, notify=groupsChanged)
     def proxyModel(self):
-        """Get the proxy model for trips"""
+        """Get the proxy model for groups"""
         return self._proxy_model
 
     @Slot(str, result="QVariantList")
-    def getParticipants(self, trip_id: str):
-        """Get participants for a specific trip"""
-        trip = self.repo.load_trip(trip_id)
-        return trip.get("participants", []) if trip else []
+    def getParticipants(self, group_id: str):
+        """Get participants for a specific group"""
+        group = self.repo.load_group(group_id)
+        return group.get("participants", []) if group else []
 
-    # ── Trip Operations ────────────────────────────────────
+    # ── Group Operations ───────────────────────────────────
     @Slot(str, result=str)
-    def addTrip(self, name: str) -> str:
-        """Add a new trip"""
-        trip = {
+    def addGroup(self, name: str) -> str:
+        """Add a new group"""
+        group = {
             "id": str(uuid.uuid4()),
             "name": name.strip(),
             "currency": self.settings.currency,
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat(),
         }
-        self.repo.insert_trip(trip)
+        self.repo.insert_group(group)
         self._refresh_all()
-        return trip["id"]
+        return group["id"]
 
     @Slot(str, result=bool)
-    def deleteTrip(self, trip_id: str) -> bool:
-        """Delete a trip"""
-        self.repo.delete_trip(trip_id)
+    def deleteGroup(self, group_id: str) -> bool:
+        """Delete a group"""
+        self.repo.delete_group(group_id)
         self._refresh_all()
 
-        if self._active_trip_id == trip_id:
-            self._active_trip_id = ""
-            self.activeTripChanged.emit()
-            self._update_active_trip_models()
+        if self._active_group_id == group_id:
+            self._active_group_id = ""
+            self.activeGroupChanged.emit()
+            self._update_active_group_models()
         return True
 
     @Slot(str, str, "QVariantList", str, result=bool)
-    def editTrip(
-        self, trip_id: str, name: str, participants: list, currency: str
+    def editGroup(
+        self, group_id: str, name: str, participants: list, currency: str
     ) -> bool:
-        """Edit a trip's details"""
-        trip = {
-            "id": trip_id,
+        """Edit a group's details"""
+        group = {
+            "id": group_id,
             "name": name.strip(),
             "currency": currency,
             "updated_at": datetime.now().isoformat(),
         }
-        self.repo.update_trip(trip)
-        self.repo.replace_participants(trip_id, participants)
+        self.repo.update_group(group)
+        self.repo.replace_participants(group_id, participants)
         self._refresh_all()
 
-        if self._active_trip_id == trip_id:
-            self.activeTripChanged.emit()
-            self._update_active_trip_models()
+        if self._active_group_id == group_id:
+            self.activeGroupChanged.emit()
+            self._update_active_group_models()
         return True
 
     @Slot(str, result=str)
-    def shareTrip(self, trip_id: str) -> str:
-        """Share a trip's details"""
-        trip = self.repo.load_trip(trip_id)
-        if not trip:
+    def shareGroup(self, group_id: str) -> str:
+        """Share a group's details"""
+        group = self.repo.load_group(group_id)
+        if not group:
             return ""
 
         base = Path(QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation))
-        path = base / "ExpenseSplitter" / "Shared" / f"{trip['name']}.pdf"
+        path = base / "ExpenseSplitter" / "Shared" / f"{group['name']}.pdf"
         path.parent.mkdir(parents=True, exist_ok=True)
 
         balances = get_participant_balances(
-            trip.get("participants", []), trip.get("expenses", [])
+            group.get("participants", []), group.get("expenses", [])
         )
         settlements = get_settlement_transactions(balances)
-        create_pdf(trip, balances, settlements, path)
+        create_pdf(group, balances, settlements, path)
         return str(path)
 
     # ── Expense Operations ─────────────────────────────────
@@ -234,8 +236,8 @@ class TripManager(QObject):
         split_type: str,
         excluded: list = [],
     ) -> str:
-        """Add an expense to a specific trip"""
-        if not self._active_trip_id:
+        """Add an expense to a specific group"""
+        if not self._active_group_id:
             return ""
 
         expense = {
@@ -247,24 +249,24 @@ class TripManager(QObject):
             "excluded": excluded,
             "created_at": datetime.now().isoformat(),
         }
-        self.repo.insert_expense(self._active_trip_id, expense)
-        self.repo.update_trip_timestamp(self._active_trip_id)
+        self.repo.insert_expense(self._active_group_id, expense)
+        self.repo.update_group_timestamp(self._active_group_id)
 
         self._refresh_all()
-        self._update_active_trip_models()
+        self._update_active_group_models()
         return expense["id"]
 
     @Slot(str, result=bool)
     def deleteExpense(self, expense_id: str) -> bool:
-        """Delete an expense from a trip"""
-        if not self._active_trip_id:
+        """Delete an expense from a group"""
+        if not self._active_group_id:
             return False
 
         self.repo.delete_expense(expense_id)
-        self.repo.update_trip_timestamp(self._active_trip_id)
+        self.repo.update_group_timestamp(self._active_group_id)
 
         self._refresh_all()
-        self._update_active_trip_models()
+        self._update_active_group_models()
         return True
 
     @Slot(str, str, float, str, str, "QVariantList", result=bool)
@@ -277,8 +279,8 @@ class TripManager(QObject):
         split_type: str,
         excluded: list,
     ) -> bool:
-        """Edit an expense in a specific trip"""
-        if not self._active_trip_id:
+        """Edit an expense in a specific group"""
+        if not self._active_group_id:
             return False
 
         expense = {
@@ -290,63 +292,63 @@ class TripManager(QObject):
             "excluded": excluded,
         }
         self.repo.update_expense(expense)
-        self.repo.update_trip_timestamp(self._active_trip_id)
+        self.repo.update_group_timestamp(self._active_group_id)
 
         self._refresh_all()
-        self._update_active_trip_models()
+        self._update_active_group_models()
         return True
 
     # ── Participant Operations ─────────────────────────────
     @Slot(str, result=str)
     def addParticipant(self, name: str) -> str:
-        """Add a participant to a specific trip"""
-        if not self._active_trip_id:
+        """Add a participant to a specific group"""
+        if not self._active_group_id:
             return ""
 
         participant = {"id": str(uuid.uuid4()), "name": name}
-        self.repo.insert_participant(self._active_trip_id, participant)
-        self.repo.update_trip_timestamp(self._active_trip_id)
+        self.repo.insert_participant(self._active_group_id, participant)
+        self.repo.update_group_timestamp(self._active_group_id)
 
         self._refresh_all()
-        self._update_active_trip_models()
+        self._update_active_group_models()
         return participant["id"]
 
     @Slot(str, result=bool)
     def deleteParticipant(self, participant_id: str) -> bool:
-        """Delete a participant from a trip"""
-        if not self._active_trip_id:
+        """Delete a participant from a group"""
+        if not self._active_group_id:
             return False
 
-        # Load trip to update expenses
-        trip = self.repo.load_trip(self._active_trip_id)
-        if not trip:
+        # Load group to update expenses
+        group = self.repo.load_group(self._active_group_id)
+        if not group:
             return False
 
         # Remove participant from expense exclusions
-        for expense in trip.get("expenses", []):
+        for expense in group.get("expenses", []):
             if "excluded" in expense and participant_id in expense["excluded"]:
                 expense["excluded"].remove(participant_id)
                 self.repo.update_expense(expense)
 
         self.repo.delete_participant(participant_id)
-        self.repo.update_trip_timestamp(self._active_trip_id)
-        
+        self.repo.update_group_timestamp(self._active_group_id)
+
         self._refresh_all()
-        self._update_active_trip_models()
+        self._update_active_group_models()
         return True
 
     @Slot(str, str, result=bool)
     def editParticipant(self, participant_id: str, name: str) -> bool:
-        """Edit a participant in a specific trip"""
-        if not self._active_trip_id:
+        """Edit a participant in a specific group"""
+        if not self._active_group_id:
             return False
 
         participant = {"id": participant_id, "name": name}
         self.repo.update_participant(participant)
-        self.repo.update_trip_timestamp(self._active_trip_id)
+        self.repo.update_group_timestamp(self._active_group_id)
 
         self._refresh_all()
-        self._update_active_trip_models()
+        self._update_active_group_models()
         return True
 
     @Slot(result=str)
@@ -355,21 +357,21 @@ class TripManager(QObject):
 
     # ── Data Management Operations ─────────────────────────────
     @Slot(result=bool)
-    def deleteAllTrips(self) -> bool:
-        """Delete all trips from the database"""
-        success = self.repo.delete_all_trips()
+    def deleteAllGroups(self) -> bool:
+        """Delete all groups from the database"""
+        success = self.repo.delete_all_groups()
 
         if success:
-            # Clear active trip
-            self._active_trip_id = ""
-            self.activeTripChanged.emit()
+            # Clear active group
+            self._active_group_id = ""
+            self.activeGroupChanged.emit()
 
-            # Clear last trip from settings
-            self.settings.setLastTripId("")
+            # Clear last group from settings
+            self.settings.setLastGroupId("")
 
             # Refresh all models
             self._refresh_all()
-            self._update_active_trip_models()
+            self._update_active_group_models()
 
         return success
 

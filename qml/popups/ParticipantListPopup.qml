@@ -203,7 +203,7 @@ Popup {
 
         onInputAccepted: function (text) {
             control.participantModel.append({
-                                                "id": tripManager.generateId(),
+                                                "id": groupManager.generateId(),
                                                 "name": text.trim()
                                             })
         }

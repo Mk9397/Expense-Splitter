@@ -51,7 +51,7 @@ RowLayout {
             Timer {
                 id: searchDebounce
                 interval: 300
-                onTriggered: tripManager.setFilter(searchField.text)
+                onTriggered: groupManager.setFilter(searchField.text)
             }
 
             TextField {

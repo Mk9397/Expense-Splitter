@@ -7,10 +7,10 @@ import json
 from datetime import datetime
 
 
-class TripRepository:
+class GroupRepository:
     def __init__(self):
         self._open_db()
-        self._trip_cache = {}
+        self._group_cache = {}
 
     def _open_db(self):
         base = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
@@ -29,7 +29,7 @@ class TripRepository:
         # ── Table Schemas ──────────────────────────────
         query.exec("PRAGMA foreign_keys = ON")
 
-        # Trips
+        # Groups
         query.exec(
             """
             CREATE TABLE IF NOT EXISTS trips (
@@ -81,17 +81,17 @@ class TripRepository:
         )
 
     # ── Public API ─────────────────────────────────
-    def load_trip(self, trip_id: str) -> dict | None:
-        if trip_id in self._trip_cache:
-            return self._trip_cache[trip_id]
+    def load_group(self, group_id: str) -> dict | None:
+        if group_id in self._group_cache:
+            return self._group_cache[group_id]
 
         query = QSqlQuery(self.db)
         query.prepare("SELECT * FROM trips WHERE id = ?")
-        query.addBindValue(trip_id)
+        query.addBindValue(group_id)
         if not query.exec() or not query.next():
             return None
 
-        trip = {
+        group = {
             "id": query.value("id"),
             "name": query.value("name"),
             "currency": query.value("currency"),
@@ -103,16 +103,16 @@ class TripRepository:
 
         # participants
         query.prepare("SELECT * FROM participants WHERE trip_id = ?")
-        query.addBindValue(trip_id)
+        query.addBindValue(group_id)
         query.exec()
         while query.next():
-            trip["participants"].append(
+            group["participants"].append(
                 {"id": query.value("id"), "name": query.value("name")}
             )
 
         # expenses
         query.prepare("SELECT * FROM expenses WHERE trip_id = ?")
-        query.addBindValue(trip_id)
+        query.addBindValue(group_id)
         query.exec()
         while query.next():
             expense = {
@@ -124,7 +124,7 @@ class TripRepository:
                 "created_at": query.value("created_at"),
                 "excluded": [],
             }
-            trip["expenses"].append(expense)
+            group["expenses"].append(expense)
 
         query.prepare(
             """
@@ -135,40 +135,40 @@ class TripRepository:
             )
         """
         )
-        query.addBindValue(trip_id)
+        query.addBindValue(group_id)
         query.exec()
 
-        expense_map = {e["id"]: e for e in trip["expenses"]}
+        expense_map = {e["id"]: e for e in group["expenses"]}
         while query.next():
             eid = query.value("expense_id")
             pid = query.value("participant_id")
             if eid in expense_map:
                 expense_map[eid]["excluded"].append(pid)
 
-        if trip:
-            self._trip_cache[trip_id] = trip
-        return trip
+        if group:
+            self._group_cache[group_id] = group
+        return group
 
-    def _invalidate_trip_cache(self, trip_id: str):
-        """Remove from cache when trip is modified"""
-        self._trip_cache.pop(trip_id, None)
+    def _invalidate_group_cache(self, group_id: str):
+        """Remove from cache when group is modified"""
+        self._group_cache.pop(group_id, None)
 
-    def load_all_trips(self) -> list[dict]:
-        """Load all trips with their full data"""
+    def load_all_groups(self) -> list[dict]:
+        """Load all groups with their full data"""
         query = QSqlQuery(self.db)
         query.exec("SELECT id FROM trips")
 
-        trips = []
+        groups = []
         while query.next():
-            trip_id = query.value("id")
-            trip = self.load_trip(trip_id)
-            if trip:
-                trips.append(trip)
+            group_id = query.value("id")
+            group = self.load_group(group_id)
+            if group:
+                groups.append(group)
 
-        return trips
+        return groups
 
-    # ── Trip operations ───────────────────────────────
-    def insert_trip(self, trip: dict):
+    # ── Group operations ──────────────────────────────
+    def insert_group(self, group: dict):
         query = QSqlQuery(self.db)
         query.prepare(
             """
@@ -176,14 +176,14 @@ class TripRepository:
             VALUES (?, ?, ?, ?, ?)
         """
         )
-        query.addBindValue(trip["id"])
-        query.addBindValue(trip["name"])
-        query.addBindValue(trip["currency"])
-        query.addBindValue(trip["created_at"])
-        query.addBindValue(trip["updated_at"])
+        query.addBindValue(group["id"])
+        query.addBindValue(group["name"])
+        query.addBindValue(group["currency"])
+        query.addBindValue(group["created_at"])
+        query.addBindValue(group["updated_at"])
         query.exec()
 
-    def update_trip(self, trip: dict):
+    def update_group(self, group: dict):
         query = QSqlQuery(self.db)
         query.prepare(
             """
@@ -192,39 +192,39 @@ class TripRepository:
             WHERE id = ?
         """
         )
-        query.addBindValue(trip["name"])
-        query.addBindValue(trip["currency"])
-        query.addBindValue(trip["updated_at"])
-        query.addBindValue(trip["id"])
+        query.addBindValue(group["name"])
+        query.addBindValue(group["currency"])
+        query.addBindValue(group["updated_at"])
+        query.addBindValue(group["id"])
         query.exec()
-        self._invalidate_trip_cache(trip["id"])
+        self._invalidate_group_cache(group["id"])
 
-    def update_trip_timestamp(self, trip_id: str):
+    def update_group_timestamp(self, group_id: str):
         """Update only the updated_at field"""
         query = QSqlQuery(self.db)
         query.prepare("UPDATE trips SET updated_at = ? WHERE id = ?")
         query.addBindValue(datetime.now().isoformat())
-        query.addBindValue(trip_id)
+        query.addBindValue(group_id)
         query.exec()
-        self._invalidate_trip_cache(trip_id)
+        self._invalidate_group_cache(group_id)
 
-    def delete_trip(self, trip_id: str):
+    def delete_group(self, group_id: str):
         query = QSqlQuery(self.db)
         query.prepare("DELETE FROM trips WHERE id = ?")
-        query.addBindValue(trip_id)
+        query.addBindValue(group_id)
         query.exec()  # CASCADE deletes participants/expenses automatically
-        self._invalidate_trip_cache(trip_id)
+        self._invalidate_group_cache(group_id)
 
-    def delete_all_trips(self):
-        """Delete all trips and related data from the database"""
+    def delete_all_groups(self):
+        """Delete all groups and related data from the database"""
         query = QSqlQuery(self.db)
-        # Thanks to CASCADE, deleting trips will delete everything
+        # Thanks to CASCADE, deleting groups will delete everything
         query.exec("DELETE FROM trips")
-        self._trip_cache.clear()
+        self._group_cache.clear()
         return query.numRowsAffected() >= 0
 
     # ── Participants ───────────────────────────────
-    def insert_participant(self, trip_id: str, participant: dict):
+    def insert_participant(self, group_id: str, participant: dict):
         query = QSqlQuery(self.db)
         query.prepare(
             """
@@ -233,52 +233,52 @@ class TripRepository:
         """
         )
         query.addBindValue(participant["id"])
-        query.addBindValue(trip_id)
+        query.addBindValue(group_id)
         query.addBindValue(participant["name"])
         query.exec()
-        self._invalidate_trip_cache(trip_id)
+        self._invalidate_group_cache(group_id)
 
     def update_participant(self, participant: dict):
         query = QSqlQuery(self.db)
         query.prepare("SELECT trip_id FROM participants WHERE id = ?")
         query.addBindValue(participant["id"])
         query.exec()
-        trip_id = query.value(0) if query.next() else None
+        group_id = query.value(0) if query.next() else None
 
         query.prepare("UPDATE participants SET name = ? WHERE id = ?")
         query.addBindValue(participant["name"])
         query.addBindValue(participant["id"])
         query.exec()
 
-        if trip_id:
-            self._invalidate_trip_cache(trip_id)
+        if group_id:
+            self._invalidate_group_cache(group_id)
 
     def delete_participant(self, participant_id: str):
         query = QSqlQuery(self.db)
         query.prepare("SELECT trip_id FROM participants WHERE id = ?")
         query.addBindValue(participant_id)
         query.exec()
-        trip_id = query.value(0) if query.next() else None
+        group_id = query.value(0) if query.next() else None
 
         query.prepare("DELETE FROM participants WHERE id = ?")
         query.addBindValue(participant_id)
         query.exec()  # CASCADE deletes exclusions
 
-        if trip_id:
-            self._invalidate_trip_cache(trip_id)
+        if group_id:
+            self._invalidate_group_cache(group_id)
 
-    def replace_participants(self, trip_id: str, participants: list[dict]):
+    def replace_participants(self, group_id: str, participants: list[dict]):
         query = QSqlQuery(self.db)
         query.prepare("DELETE FROM participants WHERE trip_id = ?")
-        query.addBindValue(trip_id)
+        query.addBindValue(group_id)
         query.exec()
 
         for p in participants:
-            self.insert_participant(trip_id, p)
-        self._invalidate_trip_cache(trip_id)
+            self.insert_participant(group_id, p)
+        self._invalidate_group_cache(group_id)
 
     # ── Expenses ───────────────────────────────
-    def insert_expense(self, trip_id: str, expense: dict):
+    def insert_expense(self, group_id: str, expense: dict):
         query = QSqlQuery(self.db)
         query.prepare(
             """
@@ -287,7 +287,7 @@ class TripRepository:
         """
         )
         query.addBindValue(expense["id"])
-        query.addBindValue(trip_id)
+        query.addBindValue(group_id)
         query.addBindValue(expense["title"])
         query.addBindValue(expense["amount"])
         query.addBindValue(expense["paid_by"])
@@ -297,14 +297,14 @@ class TripRepository:
 
         for pid in expense.get("excluded", []):
             self.insert_expense_exclusion(expense["id"], pid)
-        self._invalidate_trip_cache(trip_id)
+        self._invalidate_group_cache(group_id)
 
     def update_expense(self, expense: dict):
         query = QSqlQuery(self.db)
         query.prepare("SELECT trip_id FROM expenses WHERE id = ?")
         query.addBindValue(expense["id"])
         query.exec()
-        trip_id = query.value(0) if query.next() else None
+        group_id = query.value(0) if query.next() else None
 
         query.prepare(
             """
@@ -327,22 +327,22 @@ class TripRepository:
         for pid in expense.get("excluded", []):
             self.insert_expense_exclusion(expense["id"], pid)
 
-        if trip_id:
-            self._invalidate_trip_cache(trip_id)
+        if group_id:
+            self._invalidate_group_cache(group_id)
 
     def delete_expense(self, expense_id: str):
         query = QSqlQuery(self.db)
         query.prepare("SELECT trip_id FROM expenses WHERE id = ?")
         query.addBindValue(expense_id)
         query.exec()
-        trip_id = query.value(0) if query.next() else None
+        group_id = query.value(0) if query.next() else None
 
         query.prepare("DELETE FROM expenses WHERE id = ?")
         query.addBindValue(expense_id)
         query.exec()
 
-        if trip_id:
-            self._invalidate_trip_cache(trip_id)
+        if group_id:
+            self._invalidate_group_cache(group_id)
 
     def insert_expense_exclusion(self, expense_id: str, participant_id: str):
         query = QSqlQuery(self.db)
@@ -363,7 +363,7 @@ class TripRepository:
             all_data = {
                 "export_date": datetime.now().isoformat(),
                 "version": "1.0",
-                "trips": self.load_all_trips(),
+                "trips": self.load_all_groups(),
             }
 
             with open(export_path, "w", encoding="utf-8") as f:

@@ -1,9 +1,20 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "expense-splitter"
+name = "Expense-Splitter"
+version = "0.1.0"
+readme = "README.MD"
+dependencies = ["PySide6 (>=6.9.0)"]
+license = {text = "MIT"}
+
+[[project.authors]]
+name = "Mk"
+email = "muktarayinde@gmail.com"
 
 [tool.pyside6-project]
 files = [
-    "ExpenseSplitter.pyproject",
     "main.py",
     "qml/components/CurrencyComboBox.qml",
     "qml/components/ExpenseCard.qml",
@@ -13,20 +24,20 @@ files = [
     "qml/components/SettingsCard.qml",
     "qml/components/SettingsSection.qml",
     "qml/components/SettlementCard.qml",
-    "qml/components/TripCard.qml",
+    "qml/components/GroupCard.qml",
     "qml/components/qmldir",
     "qml/dialogs/ConfirmationDialog.qml",
-    "qml/dialogs/EditTripDialog.qml",
+    "qml/dialogs/EditGroupDialog.qml",
     "qml/dialogs/ExpenseDialog.qml",
     "qml/dialogs/GenericInputDialog.qml",
     "qml/dialogs/qmldir",
     "qml/main.qml",
     "qml/pages/HomePage.qml",
     "qml/pages/SettingsPage.qml",
-    "qml/pages/TripPage.qml",
-    "qml/pages/TripPage/ExpensesTab.qml",
-    "qml/pages/TripPage/ParticipantsTab.qml",
-    "qml/pages/TripPage/SettlementsTab.qml",
+    "qml/pages/GroupPage.qml",
+    "qml/pages/GroupPage/ExpensesTab.qml",
+    "qml/pages/GroupPage/ParticipantsTab.qml",
+    "qml/pages/GroupPage/SettlementsTab.qml",
     "qml/popups/ParticipantListPopup.qml",
     "qml/popups/ParticipantMultiSelectPopup.qml",
     "qml/popups/ToastPopup.qml",
@@ -36,12 +47,12 @@ files = [
     "qml/theme/ThemeManager.qml",
     "qml/theme/qmldir",
     "resources.qrc",
-    "src/app_state.py"
-    "src/data/trip_repository.py",
+    "src/app_state.py",
+    "src/data/group_repository.py",
+    "src/data/models.py",
     "src/file_actions.py",
-    "src/models.py",
+    "src/group_manager.py",
     "src/services/settlement_service.py",
     "src/services/share_service.py",
     "src/settings_manager.py",
-    "src/trip_manager.py"
 ]

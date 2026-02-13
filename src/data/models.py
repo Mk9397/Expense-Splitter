@@ -8,7 +8,7 @@ from PySide6.QtCore import (
 from PySide6.QtSql import QSqlQuery, QSqlQueryModel
 
 
-class TripSqlModel(QSqlQueryModel):
+class GroupSqlModel(QSqlQueryModel):
     IdRole = Qt.UserRole + 1
     NameRole = Qt.UserRole + 2
     CurrencyRole = Qt.UserRole + 3
@@ -45,7 +45,7 @@ class TripSqlModel(QSqlQueryModel):
         return super().data(index, role)
 
     def select(self):
-        """Load trips with participant counts"""
+        """Load groups with participant counts"""
         query = QSqlQuery(self.db)
         query.exec(
             """
@@ -65,45 +65,45 @@ class TripSqlModel(QSqlQueryModel):
         self.setQuery(query)
 
 
-class TripFilterProxy(QSortFilterProxyModel):
+class GroupFilterProxy(QSortFilterProxyModel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setDynamicSortFilter(True)
 
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.setFilterRole(TripSqlModel.NameRole)
+        self.setFilterRole(GroupSqlModel.NameRole)
 
-        self.setSortRole(TripSqlModel.UpdatedAtRole)
+        self.setSortRole(GroupSqlModel.UpdatedAtRole)
         self.sort(0, Qt.DescendingOrder)
 
     @Slot()
     def sortByNameAsc(self):
-        self.setSortRole(TripSqlModel.NameRole)
+        self.setSortRole(GroupSqlModel.NameRole)
         self.sort(0, Qt.AscendingOrder)
 
     @Slot()
     def sortByNameDesc(self):
-        self.setSortRole(TripSqlModel.NameRole)
+        self.setSortRole(GroupSqlModel.NameRole)
         self.sort(0, Qt.DescendingOrder)
 
     @Slot()
     def sortByUpdatedDesc(self):
-        self.setSortRole(TripSqlModel.UpdatedAtRole)
+        self.setSortRole(GroupSqlModel.UpdatedAtRole)
         self.sort(0, Qt.DescendingOrder)
 
     @Slot()
     def sortByUpdatedAsc(self):
-        self.setSortRole(TripSqlModel.UpdatedAtRole)
+        self.setSortRole(GroupSqlModel.UpdatedAtRole)
         self.sort(0, Qt.AscendingOrder)
 
     @Slot()
     def sortByCreatedDesc(self):
-        self.setSortRole(TripSqlModel.CreatedAtRole)
+        self.setSortRole(GroupSqlModel.CreatedAtRole)
         self.sort(0, Qt.DescendingOrder)
 
     @Slot()
     def sortByCreatedAsc(self):
-        self.setSortRole(TripSqlModel.CreatedAtRole)
+        self.setSortRole(GroupSqlModel.CreatedAtRole)
         self.sort(0, Qt.AscendingOrder)
 
 
@@ -150,7 +150,7 @@ class ExpenseSqlModel(QSqlQueryModel):
             return super().data(self.index(index.row(), column_map[role]))
         return super().data(index, role)
 
-    def setTrip(self, trip_id):
+    def setGroup(self, group_id):
         query = QSqlQuery(self.db)
         query.prepare(
             """
@@ -172,7 +172,7 @@ class ExpenseSqlModel(QSqlQueryModel):
             ORDER BY e.created_at DESC
         """
         )
-        query.addBindValue(trip_id)
+        query.addBindValue(group_id)
         query.exec()
         self.setQuery(query)
 
@@ -200,7 +200,7 @@ class ParticipantSqlModel(QSqlQueryModel):
             return super().data(self.index(index.row(), column_map[role]))
         return super().data(index, role)
 
-    def setTrip(self, trip_id):
+    def setGroup(self, group_id):
         query = QSqlQuery(self.db)
         query.prepare(
             """
@@ -209,7 +209,7 @@ class ParticipantSqlModel(QSqlQueryModel):
             WHERE trip_id = ?
         """
         )
-        query.addBindValue(trip_id)
+        query.addBindValue(group_id)
         query.exec()
         self.setQuery(query)
 
@@ -227,6 +227,72 @@ class ParticipantSqlModel(QSqlQueryModel):
         query.addBindValue(participant_id)
         query.exec()
         return query.next() and query.value(0) or ""
+
+
+class ParticipantProxyModelWithNobody(QSortFilterProxyModel):
+    """Adds a 'None' option as the first row in participant list"""
+
+    def __init__(self, sourceModel=None, parent=None):
+        super().__init__(parent)
+        if sourceModel:
+            self.setSourceModel(sourceModel)
+
+    def rowCount(self, parent=QModelIndex()):
+        """Add 1 for the 'None' row"""
+        return super().rowCount(parent) + 1
+
+    def data(self, index, role=Qt.DisplayRole):
+        """Return 'None' data for row 0, source data for others"""
+        if not index.isValid():
+            return None
+
+        if index.row() == 0:
+            if role == ParticipantSqlModel.IdRole:
+                return ""
+            elif role == ParticipantSqlModel.NameRole:
+                return "None"
+            return None
+
+        sourceRow = index.row() - 1
+        sourceIndex = self.sourceModel().index(sourceRow, 0)
+        return self.sourceModel().data(sourceIndex, role)
+
+    def index(self, row, column, parent=QModelIndex()):
+        """Create index for proxy model"""
+        if row < 0 or row >= self.rowCount(parent) or column != 0:
+            return QModelIndex()
+        return self.createIndex(row, column)
+
+    def roleNames(self):
+        """Forward roleNames from source model"""
+        if self.sourceModel():
+            return self.sourceModel().roleNames()
+        return {}
+
+    @Slot(str, result=int)
+    def indexOfId(self, participant_id: str):
+        """Find index by participant ID"""
+        if not participant_id:
+            return 0
+
+        for row in range(1, self.rowCount()):
+            if (
+                self.data(self.index(row, 0), ParticipantSqlModel.IdRole)
+                == participant_id
+            ):
+                return row
+
+        return 0
+
+    @Slot(str, result=str)
+    def nameOfId(self, participant_id: str):
+        """Get name by participant ID"""
+        if not participant_id:
+            return "None"
+
+        if hasattr(self.sourceModel(), "nameOfId"):
+            return self.sourceModel().nameOfId(participant_id)
+        return ""
 
 
 class SettlementModel(QAbstractListModel):

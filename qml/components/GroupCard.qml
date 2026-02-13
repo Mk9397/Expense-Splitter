@@ -10,13 +10,13 @@ ItemDelegate {
     id: control
     implicitHeight: 88
 
-    property string tripId: ""
-    property string tripName: ""
+    property string groupId: ""
+    property string groupName: ""
     property int participantCount: 0
 
-    signal editTrip
-    signal deleteTrip
-    signal shareTrip
+    signal editGroup
+    signal deleteGroup
+    signal shareGroup
 
     background: Rectangle {
         radius: 16
@@ -69,7 +69,7 @@ ItemDelegate {
 
             Label {
                 anchors.centerIn: parent
-                text: control.tripName.substring(0, 1).toUpperCase()
+                text: control.groupName.substring(0, 1).toUpperCase()
                 font.pixelSize: 24
                 font.weight: Font.Bold
                 color: Material.accent
@@ -82,7 +82,7 @@ ItemDelegate {
             spacing: 6
 
             Label {
-                text: control.tripName
+                text: control.groupName
                 font.pixelSize: 17
                 font.weight: Font.DemiBold
                 Layout.fillWidth: true
@@ -115,12 +115,12 @@ ItemDelegate {
                 MenuItem {
                     text: "Edit"
                     icon.source: "qrc:/icons/edit.svg"
-                    onTriggered: control.editTrip()
+                    onTriggered: control.editGroup()
                 }
                 MenuItem {
                     text: "Share"
                     icon.source: "qrc:/icons/share.svg"
-                    onTriggered: control.shareTrip()
+                    onTriggered: control.shareGroup()
                 }
 
                 MenuSeparator {}
@@ -128,7 +128,7 @@ ItemDelegate {
                     text: "Delete"
                     icon.source: "qrc:/icons/delete.svg"
                     icon.color: Material.color(Material.Red)
-                    onTriggered: control.deleteTrip()
+                    onTriggered: control.deleteGroup()
                 }
             }
 

@@ -92,7 +92,7 @@ ColumnLayout {
             splitType: split_type
             excludedIds: excluded ?? []
 
-            tripCurrencySymbol: AppState.currencySymbol
+            groupCurrencySymbol: AppState.currencySymbol
             participantCount: AppState.participantCount
 
             onEditExpense: root.editExpenseClicked(id, title, amount, paid_by,

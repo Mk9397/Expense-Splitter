@@ -7,10 +7,10 @@ from PySide6.QtQml import QQmlApplicationEngine
 
 import resources_rc
 from src.app_state import AppState
-from src.data.trip_repository import TripRepository
+from src.data.group_repository import GroupRepository
 from src.file_actions import FileSystemActions
+from src.group_manager import GroupManager
 from src.settings_manager import SettingsManager
-from src.trip_manager import TripManager
 
 if __name__ == "__main__":
     app = QGuiApplication(sys.argv)
@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     app_state = AppState()
     settings_manager = SettingsManager()
-    trip_manager = TripManager(settings_manager, TripRepository(), app_state)
+    group_manager = GroupManager(settings_manager, GroupRepository(), app_state)
     file_actions = FileSystemActions()
 
     engine = QQmlApplicationEngine()
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     engine.rootContext().setContextProperty("appState", app_state)
     engine.rootContext().setContextProperty("settingsManager", settings_manager)
     engine.rootContext().setContextProperty("fileActions", file_actions)
-    engine.rootContext().setContextProperty("tripManager", trip_manager)
+    engine.rootContext().setContextProperty("groupManager", group_manager)
 
     qml_file = qml_dir / "main.qml"
     engine.load(qml_file)

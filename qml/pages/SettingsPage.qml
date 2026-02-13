@@ -236,10 +236,10 @@ Page {
                             content: CheckDelegate {
                                 implicitHeight: 56
                                 anchors.fill: parent
-                                text: "Open last trip on startup"
+                                text: "Open last group on startup"
                                 font.pixelSize: 14
-                                checked: settingsManager?.openLastTrip ?? true
-                                onToggled: settingsManager.setOpenLastTrip(
+                                checked: settingsManager?.openLastGroup ?? true
+                                onToggled: settingsManager.setOpenLastGroup(
                                                checked)
                                 HoverHandler {
                                     cursorShape: Qt.PointingHandCursor
@@ -401,8 +401,8 @@ Page {
         currentFolder: "file:///home"
 
         onAccepted: {
-            if (tripManager.exportDataAsJson(selectedFile.toString().replace(
-                                                 "file://", ""))) {
+            if (groupManager.exportDataAsJson(selectedFile.toString().replace(
+                                                  "file://", ""))) {
                 console.log("JSON export successful")
             } else {
                 console.error("JSON export failed")
@@ -418,8 +418,8 @@ Page {
         currentFolder: "file:///home"
 
         onAccepted: {
-            if (tripManager.exportDatabaseFile(selectedFile.toString().replace(
-                                                   "file://", ""))) {
+            if (groupManager.exportDatabaseFile(selectedFile.toString().replace(
+                                                    "file://", ""))) {
                 console.log("Database backup successful")
             } else {
                 console.error("Database backup failed")
@@ -448,7 +448,7 @@ Page {
         confirmColor: Material.color(Material.Red)
 
         onConfirmed: {
-            if (!tripManager.deleteAllTrips()) {
+            if (!groupManager.deleteAllGroups()) {
                 console.error("Failed to delete all groups")
             }
         }

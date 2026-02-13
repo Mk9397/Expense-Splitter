@@ -11,7 +11,7 @@ import theme
 Page {
     id: root
     title: "Groups"
-    property int totalTrips: tripManager?.tripCount ?? 0
+    property int totalGroups: groupManager?.groupCount ?? 0
 
     background: Rectangle {
         color: Material.background
@@ -58,11 +58,11 @@ Page {
         // Search Bar
         SearchBar {
             id: searchBar
-            visible: totalTrips > 0
+            visible: totalGroups > 0
         }
 
         RowLayout {
-            visible: totalTrips > 0
+            visible: totalGroups > 0
             Label {
                 text: "Your Groups"
                 font.pixelSize: 16
@@ -86,27 +86,27 @@ Page {
 
                 MenuItem {
                     text: "Name (A–Z)"
-                    onTriggered: tripList.model.sortByNameAsc()
+                    onTriggered: groupList.model.sortByNameAsc()
                 }
                 MenuItem {
                     text: "Name (Z–A)"
-                    onTriggered: tripList.model.sortByNameDesc()
+                    onTriggered: groupList.model.sortByNameDesc()
                 }
                 MenuItem {
                     text: "Recently updated"
-                    onTriggered: tripList.model.sortByUpdatedDesc()
+                    onTriggered: groupList.model.sortByUpdatedDesc()
                 }
                 MenuItem {
                     text: "Oldest updated"
-                    onTriggered: tripList.model.sortByUpdatedAsc()
+                    onTriggered: groupList.model.sortByUpdatedAsc()
                 }
                 MenuItem {
                     text: "Recently created"
-                    onTriggered: tripList.model.sortByCreatedDesc()
+                    onTriggered: groupList.model.sortByCreatedDesc()
                 }
                 MenuItem {
                     text: "Oldest created"
-                    onTriggered: tripList.model.sortByCreatedAsc()
+                    onTriggered: groupList.model.sortByCreatedAsc()
                 }
             }
         }
@@ -121,7 +121,7 @@ Page {
                 anchors.centerIn: parent
                 width: parent.width * 0.8
                 spacing: 16
-                visible: totalTrips === 0
+                visible: totalGroups === 0
 
                 // Icon
                 Rectangle {
@@ -166,7 +166,7 @@ Page {
                 anchors.centerIn: parent
                 width: parent.width * 0.8
                 spacing: 12
-                visible: totalTrips > 0 && tripList.count === 0
+                visible: totalGroups > 0 && groupList.count === 0
 
                 Label {
                     text: "No groups found"
@@ -186,7 +186,7 @@ Page {
             }
 
             ListView {
-                id: tripList
+                id: groupList
                 anchors.fill: parent
                 spacing: 12
                 clip: true
@@ -194,42 +194,42 @@ Page {
                 bottomMargin: 20
 
                 // model: ListModel {}
-                model: tripManager?.proxyModel ?? null
+                model: groupManager?.proxyModel ?? null
 
-                delegate: TripCard {
+                delegate: GroupCard {
                     width: ListView.view.width
-                    tripId: id
-                    tripName: name
+                    groupId: id
+                    groupName: name
                     participantCount: participant_count
 
                     onClicked: {
                         var stack = root.StackView.view
-                        stack.push("TripPage.qml", {
-                                       "tripId": id
+                        stack.push("GroupPage.qml", {
+                                       "groupId": id
                                    })
                     }
 
-                    onEditTrip: {
-                        editTripDialog.tripId = id
-                        editTripDialog.tripName = name
-                        editTripDialog.participants = tripManager.getParticipants(
+                    onEditGroup: {
+                        editGroupDialog.groupId = id
+                        editGroupDialog.groupName = name
+                        editGroupDialog.participants = groupManager.getParticipants(
                                     id)
-                        editTripDialog.tripCurrency = currency
-                        editTripDialog.open()
+                        editGroupDialog.groupCurrency = currency
+                        editGroupDialog.open()
                     }
 
-                    onDeleteTrip: {
+                    onDeleteGroup: {
                         if (!settingsManager.confirmDeleteGroups) {
-                            tripManager.deleteTrip(id)
+                            groupManager.deleteGroup(id)
                         } else {
-                            deleteTripDialog.tripId = id
-                            deleteTripDialog.tripName = name
-                            deleteTripDialog.open()
+                            deleteGroupDialog.groupId = id
+                            deleteGroupDialog.groupName = name
+                            deleteGroupDialog.open()
                         }
                     }
 
-                    onShareTrip: {
-                        let path = tripManager.shareTrip(id)
+                    onShareGroup: {
+                        let path = groupManager.shareGroup(id)
                         if (!path)
                             return
                         shareToast.pdfPath = path
@@ -249,7 +249,7 @@ Page {
 
         Button {
             text: "Create Your First Group"
-            visible: totalTrips === 0
+            visible: totalGroups === 0
 
             Layout.fillWidth: true
             Layout.preferredHeight: 52
@@ -260,7 +260,7 @@ Page {
             Material.elevation: 3
             highlighted: true
 
-            onClicked: addTripDialog.open()
+            onClicked: addGroupDialog.open()
             HoverHandler {
                 cursorShape: Qt.PointingHandCursor
             }
@@ -277,7 +277,7 @@ Page {
 
         width: hovered ? implicitWidth + 32 : 56
         height: 56
-        visible: totalTrips > 0
+        visible: totalGroups > 0
 
         Behavior on width {
             NumberAnimation {
@@ -303,7 +303,7 @@ Page {
             }
         }
 
-        onClicked: addTripDialog.open()
+        onClicked: addGroupDialog.open()
         HoverHandler {
             cursorShape: Qt.PointingHandCursor
         }
@@ -314,33 +314,33 @@ Page {
     }
 
     GenericInputDialog {
-        id: addTripDialog
+        id: addGroupDialog
         dialogTitle: "Create New Group"
         placeholderText: "Group name"
         confirmButtonText: "Create Group"
 
         onInputAccepted: function (text) {
-            tripManager.addTrip(text)
+            groupManager.addGroup(text)
         }
     }
 
     ConfirmationDialog {
-        id: deleteTripDialog
-        property string tripId: ""
-        property string tripName: ""
+        id: deleteGroupDialog
+        property string groupId: ""
+        property string groupName: ""
 
         title: "Delete Group"
-        message: "Are you sure you want to delete \"" + tripName + "\"?"
+        message: "Are you sure you want to delete \"" + groupName + "\"?"
         warningText: "This action cannot be undone."
         confirmText: "Delete"
         confirmColor: Material.color(Material.Red)
-        onConfirmed: tripManager.deleteTrip(tripId)
+        onConfirmed: groupManager.deleteGroup(groupId)
     }
 
-    EditTripDialog {
-        id: editTripDialog
-        onTripEdited: function (tripId, tripName, participants, tripCurrency) {
-            tripManager.editTrip(tripId, tripName, participants, tripCurrency)
+    EditGroupDialog {
+        id: editGroupDialog
+        onGroupEdited: function (id, name, participants, currency) {
+            groupManager.editGroup(id, name, participants, currency)
         }
     }
 }

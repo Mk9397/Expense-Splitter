@@ -18,8 +18,8 @@ ItemDelegate {
     property var excludedIds: []
 
     property int participantCount: 1
-    property string tripCurrencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
-                                                              ) : ""
+    property string groupCurrencySymbol: settingsManager ? settingsManager.getCurrencySymbol(
+                                                               ) : ""
 
     function formatAmount(amount) {
         return Number(amount).toLocaleString(Qt.locale(), 'f', 2)
@@ -107,7 +107,7 @@ ItemDelegate {
         }
 
         Label {
-            text: tripCurrencySymbol + formatAmount(control.expenseAmount)
+            text: groupCurrencySymbol + formatAmount(control.expenseAmount)
             font.weight: Font.Bold
             font.pixelSize: 17
             color: Material.accent

@@ -3,9 +3,9 @@ from PySide6.QtCore import QObject, Signal, Property, Slot
 
 class AppState(QObject):
     # Signals for all state changes
-    tripIdChanged = Signal(str)
-    tripNameChanged = Signal(str)
-    tripCurrencyChanged = Signal(str)
+    groupIdChanged = Signal(str)
+    groupNameChanged = Signal(str)
+    groupCurrencyChanged = Signal(str)
     currencySymbolChanged = Signal(str)
     participantCountChanged = Signal(int)
     totalSpentChanged = Signal(float)
@@ -21,10 +21,10 @@ class AppState(QObject):
     def __init__(self):
         super().__init__()
 
-        # Trip state
-        self._trip_id = ""
-        self._trip_name = ""
-        self._trip_currency = ""
+        # Group state
+        self._group_id = ""
+        self._group_name = ""
+        self._group_currency = ""
         self._currency_symbol = ""
         self._participant_count = 0
         self._total_spent = 0.0
@@ -37,38 +37,38 @@ class AppState(QObject):
         self._settlement_model = None
         self._participant_balances = {}
 
-    # Trip ID
-    @Property(str, notify=tripIdChanged)
-    def tripId(self):
-        return self._trip_id
+    # Group ID
+    @Property(str, notify=groupIdChanged)
+    def groupId(self):
+        return self._group_id
 
-    @tripId.setter
-    def tripId(self, value):
-        if self._trip_id != value:
-            self._trip_id = value
-            self.tripIdChanged.emit(value)
+    @groupId.setter
+    def groupId(self, value):
+        if self._group_id != value:
+            self._group_id = value
+            self.groupIdChanged.emit(value)
 
-    # Trip Name
-    @Property(str, notify=tripNameChanged)
-    def tripName(self):
-        return self._trip_name
+    # Group Name
+    @Property(str, notify=groupNameChanged)
+    def groupName(self):
+        return self._group_name
 
-    @tripName.setter
-    def tripName(self, value):
-        if self._trip_name != value:
-            self._trip_name = value
-            self.tripNameChanged.emit(value)
+    @groupName.setter
+    def groupName(self, value):
+        if self._group_name != value:
+            self._group_name = value
+            self.groupNameChanged.emit(value)
 
-    # Trip Currency
-    @Property(str, notify=tripCurrencyChanged)
-    def tripCurrency(self):
-        return self._trip_currency
+    # Group Currency
+    @Property(str, notify=groupCurrencyChanged)
+    def groupCurrency(self):
+        return self._group_currency
 
-    @tripCurrency.setter
-    def tripCurrency(self, value):
-        if self._trip_currency != value:
-            self._trip_currency = value
-            self.tripCurrencyChanged.emit(value)
+    @groupCurrency.setter
+    def groupCurrency(self, value):
+        if self._group_currency != value:
+            self._group_currency = value
+            self.groupCurrencyChanged.emit(value)
 
     # Currency Symbol
     @Property(str, notify=currencySymbolChanged)
@@ -166,10 +166,10 @@ class AppState(QObject):
     # Helper methods
     @Slot(result=str)
     def reset(self):
-        """Reset all trip state"""
-        self.tripId = ""
-        self.tripName = ""
-        self.tripCurrency = ""
+        """Reset all group state"""
+        self.groupId = ""
+        self.groupName = ""
+        self.groupCurrency = ""
         self.currencySymbol = ""
         self.participantCount = 0
         self.totalSpent = 0.0

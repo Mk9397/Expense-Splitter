@@ -26,7 +26,7 @@ WHITE = colors.white
 CARD_BORDER = colors.HexColor("#CBD5E0")
 
 
-def header_footer(canvas, doc, trip_name="Trip Report"):
+def header_footer(canvas, doc, group_name="Group Report"):
     """Generate a header for a page"""
     canvas.saveState()
     canvas.setFont("Helvetica", 9)
@@ -34,12 +34,12 @@ def header_footer(canvas, doc, trip_name="Trip Report"):
     canvas.drawRightString(
         doc.rightMargin + doc.width, doc.pagesize[1] - 1.4 * cm, f"Page {doc.page}"
     )
-    canvas.drawString(doc.leftMargin, doc.pagesize[1] - 1.4 * cm, trip_name)
+    canvas.drawString(doc.leftMargin, doc.pagesize[1] - 1.4 * cm, group_name)
     canvas.restoreState()
 
 
-def create_pdf(trip, balances, settlements, path):
-    """Generate PDF report for a trip"""
+def create_pdf(group, balances, settlements, path):
+    """Generate PDF report for a group"""
 
     doc = SimpleDocTemplate(
         str(path),
@@ -103,16 +103,16 @@ def create_pdf(trip, balances, settlements, path):
     story = []
 
     # ── Header ───────────────────────────────────────────────
-    story.append(Paragraph(trip["name"], title_style))
-    created_date = datetime.fromisoformat(trip["created_at"]).strftime("%B %d, %Y")
-    meta = f"Created {created_date}  •  {len(trip['participants'])} participants  •  {trip['currency']}"
+    story.append(Paragraph(group["name"], title_style))
+    created_date = datetime.fromisoformat(group["created_at"]).strftime("%B %d, %Y")
+    meta = f"Created {created_date}  •  {len(group['participants'])} participants  •  {group['currency']}"
     story.append(Paragraph(meta, subtitle_style))
     story.append(Spacer(1, 1.2 * cm))
 
     # ── Summary ──────────────────────────────────────────────
-    total_expenses = sum(e["amount"] for e in trip["expenses"])
-    avg_per_person = total_expenses / len(trip["participants"]) if trip["participants"] else 0
-    expense_count = len(trip["expenses"])
+    total_expenses = sum(e["amount"] for e in group["expenses"])
+    avg_per_person = total_expenses / len(group["participants"]) if group["participants"] else 0
+    expense_count = len(group["expenses"])
 
     summary_data = [
         [
@@ -121,9 +121,9 @@ def create_pdf(trip, balances, settlements, path):
             Paragraph("Avg / Person", stat_label_style),
         ],
         [
-            Paragraph(f"{total_expenses:,.0f} {trip['currency']}", stat_value_style),
+            Paragraph(f"{total_expenses:,.0f} {group['currency']}", stat_value_style),
             Paragraph(f"{expense_count}", stat_value_style),
-            Paragraph(f"{avg_per_person:,.0f} {trip['currency']}", stat_value_style),
+            Paragraph(f"{avg_per_person:,.0f} {group['currency']}", stat_value_style),
         ],
     ]
 
@@ -159,12 +159,12 @@ def create_pdf(trip, balances, settlements, path):
     expense_data = [["Expense", "Amount", "Paid By", "Split", "Date"]]
 
     sorted_expenses = sorted(
-        trip["expenses"], key=lambda x: x["created_at"], reverse=True
+        group["expenses"], key=lambda x: x["created_at"], reverse=True
     )
 
     for e in sorted_expenses:
         payer_name = next(
-            (m["name"] for m in trip["participants"] if m["id"] == e["paid_by"]), "Unknown"
+            (p["name"] for p in group["participants"] if p["id"] == e["paid_by"]), "Unknown"
         )
         expense_date = datetime.fromisoformat(e["created_at"]).strftime("%b %d")
 
@@ -317,7 +317,7 @@ def create_pdf(trip, balances, settlements, path):
                 f"<font color='{from_color.hexval()}'>{settlement['from_name']}</font>"
                 f"{arrow}"
                 f"<font color='{to_color.hexval()}'>{settlement['to_name']}</font>"
-                f"   <b>{amt_abs:,.2f} {trip['currency']}</b>"
+                f"   <b>{amt_abs:,.2f} {group['currency']}</b>"
             )
 
             card = Table(
@@ -360,6 +360,6 @@ def create_pdf(trip, balances, settlements, path):
 
     doc.build(
         story,
-        onFirstPage=lambda c, d: header_footer(c, d, trip["name"]),
-        onLaterPages=lambda c, d: header_footer(c, d, trip["name"]),
+        onFirstPage=lambda c, d: header_footer(c, d, group["name"]),
+        onLaterPages=lambda c, d: header_footer(c, d, group["name"]),
     )

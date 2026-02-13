@@ -13,8 +13,8 @@ class SettingsManager(QObject):
     themeChanged = Signal()
     currencyChanged = Signal()
     languageChanged = Signal()
-    lastTripIdChanged = Signal()
-    openLastTripChanged = Signal()
+    lastGroupIdChanged = Signal()
+    openLastGroupChanged = Signal()
     confirmDeleteGroupsChanged = Signal()
     confirmDeleteExpensesChanged = Signal()
 
@@ -28,8 +28,8 @@ class SettingsManager(QObject):
         self._theme = self.settings.value("theme", "system")
         self._currency = self.settings.value("currency", "NGN")
         self._language = self.settings.value("language", "en")
-        self._last_trip_id = self.settings.value("last_trip_id", "")
-        self._open_last_trip = self.settings.value("open_last_trip", True, type=bool)
+        self._last_group_id = self.settings.value("last_group_id", "")
+        self._open_last_group = self.settings.value("open_last_group", True, type=bool)
         self._confirm_delete_groups = self.settings.value(
             "confirm_delete_groups", True, type=bool
         )
@@ -91,37 +91,37 @@ class SettingsManager(QObject):
     def setLanguage(self, language: str):
         self.language = language
 
-    # Last trip_id property
-    @Property(str, notify=lastTripIdChanged)
-    def lastTripId(self):
-        return self._last_trip_id
+    # Last group_id property
+    @Property(str, notify=lastGroupIdChanged)
+    def lastGroupId(self):
+        return self._last_group_id
 
-    @lastTripId.setter
-    def lastTripId(self, value):
-        if self._last_trip_id != value:
-            self._last_trip_id = value
-            self.settings.setValue("last_trip_id", value)
-            self.lastTripIdChanged.emit()
+    @lastGroupId.setter
+    def lastGroupId(self, value):
+        if self._last_group_id != value:
+            self._last_group_id = value
+            self.settings.setValue("last_group_id", value)
+            self.lastGroupIdChanged.emit()
 
     @Slot(str)
-    def setLastTripId(self, trip_id):
-        self.lastTripId = trip_id
+    def setLastGroupId(self, group_id):
+        self.lastGroupId = group_id
 
-    # Open last trip on startup property
-    @Property(bool, notify=openLastTripChanged)
-    def openLastTrip(self):
-        return self._open_last_trip
+    # Open last group on startup property
+    @Property(bool, notify=openLastGroupChanged)
+    def openLastGroup(self):
+        return self._open_last_group
 
-    @openLastTrip.setter
-    def openLastTrip(self, value):
-        if self._open_last_trip != value:
-            self._open_last_trip = value
-            self.settings.setValue("open_last_trip", value)
-            self.openLastTripChanged.emit()
+    @openLastGroup.setter
+    def openLastGroup(self, value):
+        if self._open_last_group != value:
+            self._open_last_group = value
+            self.settings.setValue("open_last_group", value)
+            self.openLastGroupChanged.emit()
 
     @Slot(bool)
-    def setOpenLastTrip(self, enabled: bool):
-        self.openLastTrip = enabled
+    def setOpenLastGroup(self, enabled: bool):
+        self.openLastGroup = enabled
 
     # Confirm delete groups property
     @Property(bool, notify=confirmDeleteGroupsChanged)
@@ -186,6 +186,6 @@ class SettingsManager(QObject):
         self.theme = "system"
         self.currency = "NGN"
         self.language = "en"
-        self.openLastTrip = True
+        self.openLastGroup = True
         self.confirmDeleteGroups = True
         self.confirmDeleteExpenses = True

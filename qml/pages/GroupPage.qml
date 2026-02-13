@@ -1,22 +1,20 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 import QtQuick.Effects
 
-import components
 import dialogs
 import popups
 import singletons
 import theme
 
-import "TripPage"
+import "GroupPage"
 
 Page {
     id: root
-    property string tripId: ""
+    property string groupId: ""
 
-    Component.onCompleted: tripManager.setActiveTrip(tripId)
+    Component.onCompleted: groupManager.setActiveGroup(groupId)
     Component.onDestruction: AppState.reset()
 
     background: Rectangle {
@@ -43,7 +41,7 @@ Page {
             }
 
             Label {
-                text: AppState.tripName
+                text: AppState.groupName
                 Layout.alignment: Qt.AlignVCenter
                 font.weight: Font.DemiBold
                 font.pixelSize: 18
@@ -53,35 +51,35 @@ Page {
 
             ToolButton {
                 icon.source: 'qrc:/icons/more_vert.svg'
-                onClicked: tripOptionsMenu.open()
+                onClicked: groupOptionsMenu.open()
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
                 }
             }
 
             Menu {
-                id: tripOptionsMenu
+                id: groupOptionsMenu
                 x: parent.width
                 y: parent.height
 
                 MenuItem {
-                    text: "Edit Trip"
+                    text: "Edit Group"
                     icon.source: "qrc:/icons/edit.svg"
                     onTriggered: {
-                        editTripDialog.tripName = AppState.tripName
-                        editTripDialog.participants = AppState.participantList
-                        editTripDialog.tripCurrency = AppState.tripCurrency
-                        editTripDialog.open()
+                        editGroupDialog.groupName = AppState.groupName
+                        editGroupDialog.participants = AppState.participantList
+                        editGroupDialog.groupCurrency = AppState.groupCurrency
+                        editGroupDialog.open()
                     }
                     HoverHandler {
                         cursorShape: Qt.PointingHandCursor
                     }
                 }
                 MenuItem {
-                    text: "Share Trip"
+                    text: "Share Group"
                     icon.source: "qrc:/icons/share.svg"
                     onTriggered: {
-                        let path = tripManager.shareTrip(root.tripId)
+                        let path = groupManager.shareGroup(root.groupId)
                         if (!path)
                             return
                         shareToast.pdfPath = path
@@ -103,17 +101,17 @@ Page {
 
                 MenuSeparator {}
                 MenuItem {
-                    text: "Delete Trip"
+                    text: "Delete Group"
                     icon.source: "qrc:/icons/delete.svg"
                     icon.color: Material.color(Material.Red)
                     onTriggered: {
                         if (!settingsManager.confirmDeleteGroups) {
                             root.StackView.view.pop()
-                            tripManager.deleteTrip(root.tripId)
+                            groupManager.deleteGroup(root.groupId)
                         } else {
-                            deleteTripDialog.tripId = root.tripId
-                            deleteTripDialog.tripName = AppState.tripName
-                            deleteTripDialog.open()
+                            deleteGroupDialog.groupId = root.groupId
+                            deleteGroupDialog.groupName = AppState.groupName
+                            deleteGroupDialog.open()
                         }
                     }
 
@@ -129,7 +127,7 @@ Page {
         anchors.fill: parent
         spacing: 0
 
-        // Trip Stats Card
+        // Group Stats Card
         Rectangle {
             Layout.fillWidth: true
             Layout.margins: 16
@@ -299,7 +297,7 @@ Page {
                         deleteExpenseDialog.expenseTitle = title
                         deleteExpenseDialog.open()
                     } else {
-                        tripManager.deleteExpense(id)
+                        groupManager.deleteExpense(id)
                     }
                 }
             }
@@ -322,12 +320,12 @@ Page {
         id: shareToast
     }
 
-    EditTripDialog {
-        id: editTripDialog
-        tripId: root.tripId
+    EditGroupDialog {
+        id: editGroupDialog
+        groupId: root.groupId
 
-        onTripEdited: function (tripId, tripName, participants, tripCurrency) {
-            tripManager.editTrip(tripId, tripName, participants, tripCurrency)
+        onGroupEdited: function (id, name, participants, currency) {
+            groupManager.editGroup(id, name, participants, currency)
         }
     }
 
@@ -337,7 +335,7 @@ Page {
         participantModel: AppState.participantModel
 
         onExpenseAccepted: function (expenseId, title, amount, paidBy, splitType, excluded) {
-            tripManager.addExpense(title, amount, paidBy, splitType, excluded)
+            groupManager.addExpense(title, amount, paidBy, splitType, excluded)
         }
     }
 
@@ -347,8 +345,8 @@ Page {
         participantModel: AppState.participantModel
 
         onExpenseAccepted: function (expenseId, title, amount, paidBy, splitType, excluded) {
-            tripManager.editExpense(expenseId, title, amount, paidBy,
-                                    splitType, excluded)
+            groupManager.editExpense(expenseId, title, amount, paidBy,
+                                     splitType, excluded)
         }
     }
 
@@ -359,23 +357,23 @@ Page {
         confirmButtonText: "Add Participant"
 
         onInputAccepted: function (text) {
-            tripManager.addParticipant(text)
+            groupManager.addParticipant(text)
         }
     }
 
     ConfirmationDialog {
-        id: deleteTripDialog
-        property string tripId: ""
-        property string tripName: ""
+        id: deleteGroupDialog
+        property string groupId: ""
+        property string groupName: ""
 
         title: "Delete Group"
-        message: "Are you sure you want to delete \"" + tripName + "\"?"
+        message: "Are you sure you want to delete \"" + groupName + "\"?"
         warningText: "This action cannot be undone."
         confirmText: "Delete"
         confirmColor: Material.color(Material.Red)
         onConfirmed: {
             root.StackView.view.pop()
-            tripManager.deleteTrip(tripId)
+            groupManager.deleteGroup(groupId)
         }
     }
 
@@ -389,7 +387,7 @@ Page {
         warningText: "This action cannot be undone."
         confirmText: "Delete"
         confirmColor: Material.color(Material.Red)
-        onConfirmed: tripManager.deleteExpense(expenseId)
+        onConfirmed: groupManager.deleteExpense(expenseId)
     }
 
     ConfirmationDialog {
@@ -402,6 +400,6 @@ Page {
         warningText: "This action cannot be undone."
         confirmText: "Remove"
         confirmColor: Material.color(Material.Red)
-        onConfirmed: tripManager.deleteParticipant(participantId)
+        onConfirmed: groupManager.deleteParticipant(participantId)
     }
 }
