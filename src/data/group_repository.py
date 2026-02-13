@@ -32,7 +32,7 @@ class GroupRepository:
         # Groups
         query.exec(
             """
-            CREATE TABLE IF NOT EXISTS trips (
+            CREATE TABLE IF NOT EXISTS groups (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 currency TEXT NOT NULL,
@@ -46,9 +46,9 @@ class GroupRepository:
             """
             CREATE TABLE IF NOT EXISTS participants (
                 id TEXT PRIMARY KEY,
-                trip_id TEXT NOT NULL,
+                group_id TEXT NOT NULL,
                 name TEXT NOT NULL,
-                FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
+                FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
             );
             """
         )
@@ -57,13 +57,13 @@ class GroupRepository:
             """
             CREATE TABLE IF NOT EXISTS expenses (
                 id TEXT PRIMARY KEY,
-                trip_id TEXT NOT NULL,
+                group_id TEXT NOT NULL,
                 title TEXT NOT NULL,
                 amount REAL NOT NULL,
                 paid_by TEXT NOT NULL,
                 split_type TEXT NOT NULL,
                 created_at TEXT NOT NULL,
-                FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
+                FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
             );
             """
         )
@@ -86,7 +86,7 @@ class GroupRepository:
             return self._group_cache[group_id]
 
         query = QSqlQuery(self.db)
-        query.prepare("SELECT * FROM trips WHERE id = ?")
+        query.prepare("SELECT * FROM groups WHERE id = ?")
         query.addBindValue(group_id)
         if not query.exec() or not query.next():
             return None
@@ -102,7 +102,7 @@ class GroupRepository:
         }
 
         # participants
-        query.prepare("SELECT * FROM participants WHERE trip_id = ?")
+        query.prepare("SELECT * FROM participants WHERE group_id = ?")
         query.addBindValue(group_id)
         query.exec()
         while query.next():
@@ -111,7 +111,7 @@ class GroupRepository:
             )
 
         # expenses
-        query.prepare("SELECT * FROM expenses WHERE trip_id = ?")
+        query.prepare("SELECT * FROM expenses WHERE group_id = ?")
         query.addBindValue(group_id)
         query.exec()
         while query.next():
@@ -131,7 +131,7 @@ class GroupRepository:
             SELECT expense_id, participant_id
             FROM expense_excluded
             WHERE expense_id IN (
-                SELECT id FROM expenses WHERE trip_id = ?
+                SELECT id FROM expenses WHERE group_id = ?
             )
         """
         )
@@ -156,7 +156,7 @@ class GroupRepository:
     def load_all_groups(self) -> list[dict]:
         """Load all groups with their full data"""
         query = QSqlQuery(self.db)
-        query.exec("SELECT id FROM trips")
+        query.exec("SELECT id FROM groups")
 
         groups = []
         while query.next():
@@ -172,7 +172,7 @@ class GroupRepository:
         query = QSqlQuery(self.db)
         query.prepare(
             """
-            INSERT INTO trips (id, name, currency, created_at, updated_at)
+            INSERT INTO groups (id, name, currency, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?)
         """
         )
@@ -187,7 +187,7 @@ class GroupRepository:
         query = QSqlQuery(self.db)
         query.prepare(
             """
-            UPDATE trips
+            UPDATE groups
             SET name = ?, currency = ?, updated_at = ?
             WHERE id = ?
         """
@@ -202,7 +202,7 @@ class GroupRepository:
     def update_group_timestamp(self, group_id: str):
         """Update only the updated_at field"""
         query = QSqlQuery(self.db)
-        query.prepare("UPDATE trips SET updated_at = ? WHERE id = ?")
+        query.prepare("UPDATE groups SET updated_at = ? WHERE id = ?")
         query.addBindValue(datetime.now().isoformat())
         query.addBindValue(group_id)
         query.exec()
@@ -210,7 +210,7 @@ class GroupRepository:
 
     def delete_group(self, group_id: str):
         query = QSqlQuery(self.db)
-        query.prepare("DELETE FROM trips WHERE id = ?")
+        query.prepare("DELETE FROM groups WHERE id = ?")
         query.addBindValue(group_id)
         query.exec()  # CASCADE deletes participants/expenses automatically
         self._invalidate_group_cache(group_id)
@@ -219,7 +219,7 @@ class GroupRepository:
         """Delete all groups and related data from the database"""
         query = QSqlQuery(self.db)
         # Thanks to CASCADE, deleting groups will delete everything
-        query.exec("DELETE FROM trips")
+        query.exec("DELETE FROM groups")
         self._group_cache.clear()
         return query.numRowsAffected() >= 0
 
@@ -228,7 +228,7 @@ class GroupRepository:
         query = QSqlQuery(self.db)
         query.prepare(
             """
-            INSERT INTO participants (id, trip_id, name)
+            INSERT INTO participants (id, group_id, name)
             VALUES (?, ?, ?)
         """
         )
@@ -240,7 +240,7 @@ class GroupRepository:
 
     def update_participant(self, participant: dict):
         query = QSqlQuery(self.db)
-        query.prepare("SELECT trip_id FROM participants WHERE id = ?")
+        query.prepare("SELECT group_id FROM participants WHERE id = ?")
         query.addBindValue(participant["id"])
         query.exec()
         group_id = query.value(0) if query.next() else None
@@ -255,7 +255,7 @@ class GroupRepository:
 
     def delete_participant(self, participant_id: str):
         query = QSqlQuery(self.db)
-        query.prepare("SELECT trip_id FROM participants WHERE id = ?")
+        query.prepare("SELECT group_id FROM participants WHERE id = ?")
         query.addBindValue(participant_id)
         query.exec()
         group_id = query.value(0) if query.next() else None
@@ -269,7 +269,7 @@ class GroupRepository:
 
     def replace_participants(self, group_id: str, participants: list[dict]):
         query = QSqlQuery(self.db)
-        query.prepare("DELETE FROM participants WHERE trip_id = ?")
+        query.prepare("DELETE FROM participants WHERE group_id = ?")
         query.addBindValue(group_id)
         query.exec()
 
@@ -282,7 +282,7 @@ class GroupRepository:
         query = QSqlQuery(self.db)
         query.prepare(
             """
-            INSERT INTO expenses (id, trip_id, title, amount, paid_by, split_type, created_at)
+            INSERT INTO expenses (id, group_id, title, amount, paid_by, split_type, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """
         )
@@ -301,7 +301,7 @@ class GroupRepository:
 
     def update_expense(self, expense: dict):
         query = QSqlQuery(self.db)
-        query.prepare("SELECT trip_id FROM expenses WHERE id = ?")
+        query.prepare("SELECT group_id FROM expenses WHERE id = ?")
         query.addBindValue(expense["id"])
         query.exec()
         group_id = query.value(0) if query.next() else None
@@ -332,7 +332,7 @@ class GroupRepository:
 
     def delete_expense(self, expense_id: str):
         query = QSqlQuery(self.db)
-        query.prepare("SELECT trip_id FROM expenses WHERE id = ?")
+        query.prepare("SELECT group_id FROM expenses WHERE id = ?")
         query.addBindValue(expense_id)
         query.exec()
         group_id = query.value(0) if query.next() else None
@@ -363,7 +363,7 @@ class GroupRepository:
             all_data = {
                 "export_date": datetime.now().isoformat(),
                 "version": "1.0",
-                "trips": self.load_all_groups(),
+                "groups": self.load_all_groups(),
             }
 
             with open(export_path, "w", encoding="utf-8") as f:

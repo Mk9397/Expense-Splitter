@@ -56,8 +56,8 @@ class GroupSqlModel(QSqlQueryModel):
                 t.created_at,
                 t.updated_at,
                 COALESCE(COUNT(p.id), 0) as participant_count
-            FROM trips t
-            LEFT JOIN participants p ON t.id = p.trip_id
+            FROM groups t
+            LEFT JOIN participants p ON t.id = p.group_id
             GROUP BY t.id
             ORDER BY t.updated_at DESC
             """
@@ -168,7 +168,7 @@ class ExpenseSqlModel(QSqlQueryModel):
                     ''
                 ) AS excluded_csv
             FROM expenses e
-            WHERE trip_id = ?
+            WHERE group_id = ?
             ORDER BY e.created_at DESC
         """
         )
@@ -206,7 +206,7 @@ class ParticipantSqlModel(QSqlQueryModel):
             """
             SELECT id, name
             FROM participants
-            WHERE trip_id = ?
+            WHERE group_id = ?
         """
         )
         query.addBindValue(group_id)
