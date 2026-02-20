@@ -109,7 +109,7 @@ Detailed documentation including:
 - User testing results
 - Challenges & future improvements
 
-[→ Read the full report (PDF)](docs/report.pdf)
+[→ Read the full report (PDF)](report.pdf)
 
 ## ⚖️ License
 
@@ -117,12 +117,11 @@ This project is licensed under the MIT License — see the LICENSE file for deta
 
 ## 🙌 Acknowledgments
 
-- Team: Muktar Ayinde (Team Lead / Python), Joseph Agbortian (GitHub), Ibukun Sinjeganji, Wilfred Unokesan (Figma), Emmanuel Bassey, Oladotun Adesakin
+- Team: Muktar Ayinde (Python Developer), Ayoade Abdulfattah (Product Design), Bakare Chukwuemeka, Goodluck Williams, Friday Ekeminiabasi
 - Supervisor: Ayuba Muhammad
 - Inspiration: Splitwise, Tricount, Settle Up — but fully offline and desktop-native
 
 ## 📬 Contributing
 
 Contributions, bug reports, and feature suggestions are welcome!  
-Feel free to open an issue or pull request.  
-Built with ❤️ at Bells University of Technology — New Horizons.
+Feel free to open an issue or pull request.
