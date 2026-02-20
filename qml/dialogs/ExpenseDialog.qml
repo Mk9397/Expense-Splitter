@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 
 import popups
+import singletons
 import theme
 
 Dialog {
@@ -68,7 +69,8 @@ Dialog {
         if (isEditMode) {
             titleField.text = expenseTitle
             amountField.text = expenseAmount.toString()
-            paidByField.currentIndex = participantModel.indexOfId(paidById)
+            paidByField.currentIndex = AppState.participantProxyModel.indexOfId(
+                        paidById)
             splitTypeField.currentIndex = splitTypeField.model.indexOf(
                         splitType)
             root.excludedIds = excludedIds.slice()
@@ -138,7 +140,7 @@ Dialog {
                     id: paidByField
                     implicitHeight: 45
 
-                    model: participantModel
+                    model: AppState.participantProxyModel
                     textRole: "name"
                     valueRole: "id"
 

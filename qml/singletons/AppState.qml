@@ -22,6 +22,9 @@ QtObject {
     // Model properties
     readonly property var participantList: _appState?.participantList ?? []
     readonly property var participantModel: _appState?.participantModel ?? null
+    readonly property var participantProxyModel: _appState?.participantProxyModel
+                                                 ?? null
+
     readonly property var expenseModel: _appState?.expenseModel ?? null
     readonly property var settlementModel: _appState?.settlementModel ?? null
     readonly property var participantBalances: _appState?.participantBalances

@@ -1,5 +1,7 @@
 from PySide6.QtCore import QObject, Signal, Property, Slot
 
+from .data.models import ParticipantProxyModelWithNobody
+
 
 class AppState(QObject):
     # Signals for all state changes
@@ -14,6 +16,8 @@ class AppState(QObject):
     participantListChanged = Signal("QVariantList")
 
     participantModelChanged = Signal()
+    participantProxyModelChanged = Signal()
+
     expenseModelChanged = Signal()
     settlementModelChanged = Signal()
     participantBalancesChanged = Signal()
@@ -33,6 +37,8 @@ class AppState(QObject):
 
         # Model references
         self._participant_model = None
+        self._participant_proxy_model = None
+
         self._expense_model = None
         self._settlement_model = None
         self._participant_balances = {}
@@ -134,7 +140,17 @@ class AppState(QObject):
     @participantModel.setter
     def participantModel(self, value):
         self._participant_model = value
+        if value:
+            self._participant_proxy_model = ParticipantProxyModelWithNobody(value)
+        else:
+            self._participant_proxy_model = None
+
         self.participantModelChanged.emit()
+        self.participantProxyModelChanged.emit()
+
+    @Property("QVariant", notify=participantProxyModelChanged)
+    def participantProxyModel(self):
+        return self._participant_proxy_model
 
     @Property("QVariant", notify=expenseModelChanged)
     def expenseModel(self):
